@@ -104,10 +104,3 @@ export async function icuPush(athleteId: string | undefined, events: IcuEvent[])
   return events.length;
 }
 
-/** Wellness rows (date id + metric fields such as weight in kg) from oldest to newest, both ISO dates. */
-export async function icuWellness(athleteId: string | undefined, oldest: string, newest: string): Promise<{ id?: string; weight?: number | null }[]> {
-  const q = `?oldest=${encodeURIComponent(oldest)}&newest=${encodeURIComponent(newest)}`;
-  const res = await icuCall(athleteId, "/wellness" + q, "GET");
-  const data = await res.json().catch(() => []);
-  return Array.isArray(data) ? data : [];
-}

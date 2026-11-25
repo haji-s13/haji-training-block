@@ -19,7 +19,8 @@ and shadcn/ui. Design rules are in [DESIGN.md](DESIGN.md).
   - Box squat, bench and deadlift on the maintenance cycle (3×15 → 4×10 → 5×5) or off-season waves; other formats rotate week to week.
   - Weak stations per period get more volume, a phase-matched extra block and muscle-specific accessory work.
   - Workouts shown as lettered blocks with steps and cues. Copy, CSV and intervals.icu (as strength workouts).
-- **Profile**: PB and paces (VDOT), the shared **Season** (start and end, races, time off), and **Connections** (COROS and intervals.icu).
+- **Profile**: PB and paces (VDOT), the shared **Season** (start and end, races, time off), and **Connections** (COROS, intervals.icu and Renpho).
+- **Weight**: the Dashboard shows your latest Renpho weigh-in (lb or kg), 7-day average and weekly change, via the `renpho` Supabase Edge Function (setup in [SUPABASE_SETUP.md](SUPABASE_SETUP.md)).
 - **Accounts**: signed-in users' settings (profile, season, both plans) save to their account automatically and are private to them (Supabase, row-level security). Guests' plans aren't saved.
 
 ## Develop

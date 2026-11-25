@@ -1,29 +1,33 @@
-import { parseDate } from "./format";
-import type { Units } from "./format";
+import { isoDate, parseDate } from "./format";
 
-/** One day's body weight in kg (intervals.icu wellness is metric). */
-export interface WeighIn { date: string; kg: number }
+/** One weigh-in: the day it was on, the weight in kg and (when known) the time in ms. */
+export interface WeighIn { date: string; kg: number; ts?: number }
+export type WeightUnit = "lb" | "kg";
 
 export const KG_PER_LB = 0.45359237;
 
-/** Weight in the user's units: kg for km, lb for miles. */
-export function fmtWeight(kg: number, u: Units, digits = 1): string {
-  return u === "mi" ? `${(kg / KG_PER_LB).toFixed(digits)} lb` : `${kg.toFixed(digits)} kg`;
+/** "176.4 lb" or "80.0 kg". */
+export function fmtWeight(kg: number, u: WeightUnit, digits = 1): string {
+  return u === "lb" ? `${(kg / KG_PER_LB).toFixed(digits)} lb` : `${kg.toFixed(digits)} kg`;
 }
 
 /** Signed change, e.g. "+0.4 kg" or "−1.2 lb". */
-export function fmtWeightChange(kg: number, u: Units): string {
-  const v = u === "mi" ? kg / KG_PER_LB : kg;
+export function fmtWeightChange(kg: number, u: WeightUnit): string {
+  const v = u === "lb" ? kg / KG_PER_LB : kg;
   const r = Math.round(v * 10) / 10;
-  return `${r > 0 ? "+" : r < 0 ? "−" : "±"}${Math.abs(r).toFixed(1)} ${u === "mi" ? "lb" : "kg"}`;
+  return `${r > 0 ? "+" : r < 0 ? "−" : "±"}${Math.abs(r).toFixed(1)} ${u}`;
 }
 
-/** Wellness rows → weigh-ins with a weight, oldest first. */
-export function weighIns(rows: { id?: string; weight?: number | null }[]): WeighIn[] {
-  return rows
-    .filter((r) => typeof r.id === "string" && parseDate(r.id) !== null && typeof r.weight === "number" && r.weight > 0)
-    .map((r) => ({ date: r.id as string, kg: r.weight as number }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+/** Timed weigh-ins → the last one of each local day, oldest first. */
+export function dailyWeighIns(list: { ts: number; kg: number }[]): WeighIn[] {
+  const byDay = new Map<string, WeighIn>();
+  for (const w of list) {
+    if (!(w.kg > 0) || !Number.isFinite(w.ts)) continue;
+    const date = isoDate(new Date(w.ts));
+    const cur = byDay.get(date);
+    if (!cur || (cur.ts ?? 0) < w.ts) byDay.set(date, { date, kg: w.kg, ts: w.ts });
+  }
+  return [...byDay.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 const DAY = 86400000;
@@ -42,7 +46,9 @@ export function summarize(list: WeighIn[]): WeightSummary | null {
   const end = latest && parseDate(latest.date);
   if (!end) return null;
   const within = (from: number, to: number) => list.filter((w) => {
-    const ago = Math.round((end.getTime() - parseDate(w.date)!.getTime()) / DAY);
+    const d = parseDate(w.date);
+    if (!d) return false;
+    const ago = Math.round((end.getTime() - d.getTime()) / DAY);
     return ago >= from && ago < to;
   }).map((w) => w.kg);
   const thisWeek = avg(within(0, 7))!;

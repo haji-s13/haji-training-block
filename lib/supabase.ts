@@ -9,6 +9,8 @@ const URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ykfkgmoltgpxjonvom
 const KEY = process.env.NEXT_PUBLIC_SUPABASE_KEY || "sb_publishable_aIdIBxFXoVGGO-aTi_mINA_MHQ-om93";
 
 export const authEnabled = !!(URL && KEY);
+/** Project URL, for calling Edge Functions. */
+export const supabaseUrl = () => URL;
 
 let client: SupabaseClient | null = null;
 export function supabase(): SupabaseClient | null {

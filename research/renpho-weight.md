@@ -3,7 +3,29 @@
 **Date:** 25 Nov 2026
 **Question:** How can weigh-ins from a Renpho smart scale reach the dashboard automatically?
 
-## Answer
+## Update (25 Nov 2026): direct from Renpho
+
+Haji asked for the weight straight from Renpho, in lb, with the login under Connections. The app
+now uses Renpho's unofficial cloud API through a Supabase Edge Function
+(`supabase/functions/renpho`), because Renpho's servers can't be called from a browser.
+
+Protocol, from [ChocoTonic/renpho-py](https://github.com/ChocoTonic/renpho-py) (`constants.py`,
+`crypto.py`, `client.py`) and [p1ranha/renpho-bridge](https://github.com/p1ranha/renpho-bridge):
+
+- Every call: `POST https://cloud.renpho.com/<path>` with `{"encryptData": base64(AES-128-ECB(JSON))}`,
+  PKCS7 padding, key `ed*wijdi$h6fe3ew`; responses carry `data` encrypted the same way.
+  Headers `appVersion: 6.6.0`, `platform: android`; after login also `token` and `userId`.
+- Login: `renpho-aggregation/user/login` → `data.login.token`, `data.login.id`. `areaCode` is the account region.
+- Weights: `RenphoHealth/scale/queryBodyCompositionMeasureData` (falls back to
+  `RenphoHealth/scale/queryAllMeasureDataList`), body `{pageNum, pageSize, userIds:[id], tableName:"measurements_info_<id mod 24>"}`.
+  Records have `weight` (kg) and `timeStamp` (seconds; ms handled too).
+
+Risks (renpho-bridge README): each login starts a new session and **can sign the Renpho phone app
+out**; repeated failed logins **can lock the account**. So the app logs in only when the user
+presses Sign in, keeps the token, and never retries a failed login. Unofficial, so it may break when
+Renpho changes its app. Not yet tested against a live account.
+
+## Earlier answer (intervals.icu route, replaced)
 
 Renpho has no official public API, and it doesn't sync to intervals.icu or Garmin Connect directly.
 The app already talks to intervals.icu with the user's API key, and intervals.icu stores daily
