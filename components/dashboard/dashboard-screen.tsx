@@ -8,7 +8,7 @@ import { TestPrompt } from "@/components/plans/test-prompt";
 import { DayCell } from "@/components/builder/day-cell";
 import { HyroxDayRow } from "@/components/hyrox/hyrox-day-row";
 import { useHxSend } from "@/components/hyrox/use-hx-send";
-import { WeightCard } from "@/components/dashboard/weight-card";
+import { HealthCards } from "@/components/dashboard/health-cards";
 import { addDays, mondayOf } from "@/lib/calendar";
 import { dist, fmtDuration, isoDate, parseDate } from "@/lib/format";
 import { dayKm, daySec } from "@/lib/plan";
@@ -83,7 +83,7 @@ export function DashboardScreen() {
         </p>
       </section>
 
-      <WeightCard />
+      <HealthCards />
 
       {/* View length and day picker. */}
       <section className="flex flex-col gap-4 rounded-lg border bg-card p-4 md:p-6">
