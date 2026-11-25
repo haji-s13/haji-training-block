@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Circle, Flag, Palmtree } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Flag, Palmtree } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/components/app-provider";
 import { TestPrompt } from "@/components/plans/test-prompt";
@@ -179,17 +179,20 @@ export function DashboardScreen() {
   );
 }
 
-/** A section label with a Complete toggle when there's a session to complete. */
+/** A section label with a round complete toggle when there's a session to complete. */
 function SectionHead({ label, show, done, onToggle }: { label: string; show: boolean; done: boolean; onToggle: () => void }) {
   return (
     <div className="flex min-h-12 items-center justify-between gap-4 px-4 pt-4 md:px-6">
       <p className="text-meta uppercase text-muted-foreground">{label}</p>
       {show && (
-        <Button size="sm" variant={done ? "default" : "outline"} aria-pressed={done} onClick={onToggle}
-          aria-label={done ? `${label} done. Tap to undo` : `Mark ${label.toLowerCase()} complete`}>
-          {done ? <Check className="stroke-[3]" aria-hidden /> : <Circle aria-hidden />}
-          {done ? "Done" : "Complete"}
-        </Button>
+        <button type="button" aria-pressed={done} onClick={onToggle}
+          aria-label={done ? `${label} done. Tap to undo` : `Mark ${label.toLowerCase()} complete`}
+          className="group -my-2 -mr-2 flex size-12 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-ring">
+          <span className={cn("flex size-8 items-center justify-center rounded-full border-2 transition-colors",
+            done ? "border-status-ok bg-status-ok text-background" : "border-border text-transparent group-hover:border-status-ok group-hover:text-status-ok")}>
+            <Check className="size-4 stroke-[3]" aria-hidden />
+          </span>
+        </button>
       )}
     </div>
   );
