@@ -9,7 +9,6 @@ import { openFuelOn } from "@/components/nutrition/fuel-screen";
 import { isoDate } from "@/lib/format";
 import { fuelDay } from "@/lib/fuel-day";
 import { GEARS, kcalOf } from "@/lib/nutrition";
-import { cn } from "@/lib/utils";
 
 const MACROS = [
   { k: "carbs", label: "Carbs", color: "var(--phase-trial)" },
@@ -33,11 +32,13 @@ export function FuelSummary({ date }: { date: Date }) {
     <button type="button" onClick={() => { openFuelOn(iso); setScreen("fuel"); }} aria-label={log ? "Open Fuel" : "Open Fuel to log what you ate"}
       className="flex w-full flex-col gap-2 rounded-lg border bg-card p-4 text-left hover:bg-accent/60 focus-visible:outline-2 focus-visible:outline-ring md:px-6">
       <span className="flex items-baseline justify-between gap-4">
-        <span className="text-meta uppercase text-muted-foreground">Fuel · {GEARS[day.gear].label}</span>
+        <span className="text-meta uppercase text-muted-foreground">Fuel · {GEARS[day.gear].label}{t && !log ? " · Target" : ""}</span>
         {t ? (
           <span className="num flex items-center gap-1">
-            <span className="font-black">{eaten === null ? "–" : n(eaten)}</span>
-            <span className="text-muted-foreground">/ {n(t.kcal)} kcal</span>
+            <span>
+              {eaten !== null && <><span className="font-black">{n(eaten)}</span><span className="text-muted-foreground">/</span></>}
+              <span className={eaten === null ? "font-black" : "text-muted-foreground"}>{n(t.kcal)} kcal</span>
+            </span>
             <ChevronRight className="size-4 self-center text-muted-foreground" aria-hidden />
           </span>
         ) : <ChevronRight className="size-4 self-center text-muted-foreground" aria-hidden />}
@@ -49,10 +50,11 @@ export function FuelSummary({ date }: { date: Date }) {
             const need = t[m.k];
             return (
               <span key={m.k} className="flex min-w-0 flex-col gap-1">
-                <span className="flex items-baseline justify-between gap-1 text-meta">
-                  <span className="uppercase text-muted-foreground">{m.label}</span>
+                <span className="text-meta uppercase text-muted-foreground">{m.label}</span>
+                <span className="num truncate">
+                  {log ? <><span className="font-black">{n(got)}</span><span className="text-muted-foreground">/{n(need)} g</span></>
+                    : <span className="font-black">{n(need)} g</span>}
                 </span>
-                <span className="num truncate"><span className={cn("font-black", !log && "text-muted-foreground")}>{log ? n(got) : "–"}</span><span className="text-muted-foreground">/{n(need)} g</span></span>
                 <span className="h-1 w-full overflow-hidden rounded-full bg-muted" aria-hidden>
                   <span className="block h-full rounded-full" style={{ width: `${need > 0 ? Math.min(100, (got / need) * 100) : 0}%`, background: m.color }} />
                 </span>
