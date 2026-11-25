@@ -17,9 +17,9 @@ jobs:
       PROJECT_REF: ykfkgmoltgpxjonvomgw
     steps:
       - uses: actions/checkout@v4
-      - name: Create the health_records and nutrition_logs tables
+      - name: Create the health_records table
         run: |
-          jq -n --rawfile a supabase/health_records.sql --rawfile b supabase/nutrition_logs.sql '{query: ($a + "\n" + $b)}' > /tmp/q.json
+          jq -n --rawfile q supabase/health_records.sql '{query: $q}' > /tmp/q.json
           code=$(curl -sS -o /tmp/out.txt -w '%{http_code}' -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
             -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @/tmp/q.json)
           cat /tmp/out.txt; echo
@@ -29,3 +29,10 @@ jobs:
           version: latest
       - name: Deploy health
         run: supabase functions deploy health --no-verify-jwt --project-ref "$PROJECT_REF" --yes
+      - name: Create the nutrition_logs table
+        run: |
+          jq -n --rawfile q supabase/nutrition_logs.sql '{query: $q}' > /tmp/q.json
+          code=$(curl -sS -o /tmp/out.txt -w '%{http_code}' -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @/tmp/q.json)
+          cat /tmp/out.txt; echo
+          test "$code" -ge 200 -a "$code" -lt 300

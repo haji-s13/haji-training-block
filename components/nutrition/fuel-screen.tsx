@@ -102,6 +102,17 @@ export function FuelScreen() {
         <p className="max-w-[65ch] text-muted-foreground">Carbs follow the day&apos;s training. Protein stays steady. Fat fills the rest.</p>
       </section>
 
+      {!plan && (
+        <Alert>
+          <TriangleAlert aria-hidden />
+          <AlertTitle className="font-black">No run plan yet</AlertTitle>
+          <AlertDescription className="flex flex-col items-start gap-4">
+            <p>Every day counts as a rest day until your run plan exists, so targets will be low. Enter a valid PB on Profile.</p>
+            <Button variant="outline" onClick={() => setScreen("paces")}>Open Profile</Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {!kg ? (
         <Alert>
           <UserRound aria-hidden />
@@ -163,7 +174,7 @@ function DayTargets({ day, kg, isToday, log }: { day: FuelDay; kg: number; isTod
   const macros = [
     { k: "Carbs", eaten: log?.carbs, target: t.carbs, color: MACRO_COLOR.carbs, note: `${perKg(t.carbs / kg)} g/kg · ${GEARS[day.gear].label} gear` },
     { k: "Protein", eaten: log?.protein, target: t.protein, color: MACRO_COLOR.protein, note: `${perKg(proteinKg)} g/kg · 20–40 g every 3–4 h` },
-    { k: "Fat", eaten: log?.fat, target: t.fat, color: MACRO_COLOR.fat, note: "25% of energy · never under 20%" },
+    { k: "Fat", eaten: log?.fat, target: t.fat, color: MACRO_COLOR.fat, note: `${Math.round(((t.fat * 9) / t.kcal) * 100)}% of energy · never under 20%` },
   ];
   const training = [
     day.runKm > 0 ? `Run ${dist(day.runKm, settings.units)}` : "No run",
@@ -235,17 +246,21 @@ function DayTargets({ day, kg, isToday, log }: { day: FuelDay; kg: number; isTod
   );
 }
 
-const parseG = (v: string) => { const x = Number(v); return Number.isFinite(x) && x >= 0 ? Math.round(x) : null; };
+/** Highest grams the nutrition_logs table accepts per macro. */
+const MAX_G = { carbs: 4999, protein: 1999, fat: 1999 } as const;
+const parseG = (v: string, max: number) => { const x = Number(v); return Number.isFinite(x) && x >= 0 && x <= max ? Math.round(x) : null; };
 
 function LogCard({ day, label, log, saving, signedIn, onSave }: {
   day: FuelDay; label: string; log?: FoodLog; saving: boolean; signedIn: boolean; onSave: (l: FoodLog) => Promise<boolean>;
 }) {
   const [vals, setVals] = useState({ carbs: "", protein: "", fat: "" });
-  // Fill in the saved log when it arrives (or changes after a save).
+  const touched = useRef(false);
+  // Fill in the saved log when it arrives (or changes after a save), unless the user is already typing.
   useEffect(() => {
+    if (touched.current) return;
     setVals(log ? { carbs: String(log.carbs), protein: String(log.protein), fat: String(log.fat) } : { carbs: "", protein: "", fat: "" });
   }, [log]);
-  const g = { carbs: parseG(vals.carbs || "0"), protein: parseG(vals.protein || "0"), fat: parseG(vals.fat || "0") };
+  const g = { carbs: parseG(vals.carbs || "0", MAX_G.carbs), protein: parseG(vals.protein || "0", MAX_G.protein), fat: parseG(vals.fat || "0", MAX_G.fat) };
   const valid = g.carbs !== null && g.protein !== null && g.fat !== null;
   const empty = !vals.carbs && !vals.protein && !vals.fat;
   const kcal = valid ? kcalOf(g.carbs!, g.protein!, g.fat!) : null;
@@ -264,8 +279,8 @@ function LogCard({ day, label, log, saving, signedIn, onSave }: {
             <div key={k} className="flex min-w-0 flex-col gap-2">
               <Label htmlFor={`fuel-${k}`}>{name} (g)</Label>
               <Input id={`fuel-${k}`} className="num" type="number" inputMode="numeric" min={0} step={1} placeholder="0"
-                value={vals[k]} onChange={(e) => setVals((v) => ({ ...v, [k]: e.target.value }))}
-                aria-invalid={parseG(vals[k] || "0") === null || undefined} />
+                value={vals[k]} onChange={(e) => { touched.current = true; setVals((v) => ({ ...v, [k]: e.target.value })); }}
+                aria-invalid={parseG(vals[k] || "0", MAX_G[k]) === null || undefined} />
             </div>
           ))}
         </div>

@@ -106,7 +106,7 @@ export const lbToKg = (lb: number) => lb * KG_PER_LB;
 
 /** Height from feet and inches. */
 export const toInches = (ft: number, inch: number) => ft * 12 + inch;
-export const fromInches = (h: number) => ({ ft: Math.floor(h / 12), inch: Math.round(h - Math.floor(h / 12) * 12) });
+export const fromInches = (h: number) => { const r = Math.round(h); return { ft: Math.floor(r / 12), inch: r % 12 }; };
 
 /** Resting energy: Katch-McArdle with body fat, else Mifflin-St Jeor with sex, age and height; null if neither is possible. */
 export function restingKcal(kg: number, n: NutritionSettings, year = new Date().getFullYear()): number | null {

@@ -88,3 +88,8 @@ test("normalizeNutrition drops bad values and fills defaults; settings carry it"
   assert.deepEqual(r, { sex: undefined, birthYear: undefined, heightIn: 70, weightLb: undefined, bodyFat: undefined, proteinPerKg: 1.6, activity: "moderate", goal: "lose" });
   assert.deepEqual(normalizeSettings({}).nutrition, normalizeNutrition(undefined));
 });
+
+test("fromInches rounds decimal heights to a whole inch", () => {
+  assert.deepEqual(fromInches(71.6), { ft: 6, inch: 0 });
+  assert.deepEqual(fromInches(69.4), { ft: 5, inch: 9 });
+});
