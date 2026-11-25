@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Settings } from "./settings";
 import type { LibSession } from "./session-library";
+import type { FoodLog } from "./nutrition";
 
 // Public values (the publishable key is designed to ship to browsers; row-level
 // security keeps each person's plans private). Empty = guest-only.
@@ -110,4 +111,26 @@ export function accountError(error: unknown): string {
   if (/JWT|expired|not authenticated/i.test(m)) return "Your sign-in has expired. Sign out and sign in again.";
   if (/fetch|network/i.test(m)) return "Couldn't reach your account. Changes will save when you're back online.";
   return m || "Couldn't save to your account.";
+}
+
+/* ---------- Food logs: one private row per user per day (see supabase/nutrition_logs.sql) ---------- */
+
+/** The signed-in user's logs from `from` to `to` (ISO dates, inclusive). Row-level security limits them to their own. */
+export async function loadFoodLogs(from: string, to: string): Promise<FoodLog[]> {
+  const { data, error } = await supabase()!.from("nutrition_logs").select("day,carbs,protein,fat").gte("day", from).lte("day", to).order("day");
+  if (error) throw error;
+  return (data as { day: string; carbs: number; protein: number; fat: number }[])
+    .map((r) => ({ date: r.day, carbs: Number(r.carbs), protein: Number(r.protein), fat: Number(r.fat) }));
+}
+export async function saveFoodLog(userId: string, log: FoodLog): Promise<void> {
+  const { error } = await supabase()!.from("nutrition_logs")
+    .upsert({ user_id: userId, day: log.date, carbs: log.carbs, protein: log.protein, fat: log.fat, updated_at: new Date().toISOString() }, { onConflict: "user_id,day" });
+  if (error) throw error;
+}
+export function foodLogError(error: unknown): string {
+  const m = String((error as { message?: string })?.message || "");
+  if (/nutrition_logs.* does not exist|could not find the table/i.test(m)) return "Food logs aren't set up yet. Run supabase/nutrition_logs.sql in Supabase.";
+  if (/JWT|expired|not authenticated/i.test(m)) return "Your sign-in has expired. Sign out and sign in again.";
+  if (/fetch|network/i.test(m)) return "Couldn't reach your account. Check your connection and try again.";
+  return m || "Couldn't save your food log.";
 }

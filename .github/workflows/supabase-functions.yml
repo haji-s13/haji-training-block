@@ -1,12 +1,12 @@
 name: Supabase functions
 
-# Applies supabase/health_records.sql and deploys supabase/functions/health to the app's
+# Applies supabase/health_records.sql and supabase/nutrition_logs.sql, and deploys supabase/functions/health to the app's
 # Supabase project. One-time setup: repo secret SUPABASE_ACCESS_TOKEN
 # (supabase.com → Account → Access Tokens).
 on:
   push:
     branches: [main]
-    paths: ["supabase/functions/**", "supabase/health_records.sql", ".github/workflows/supabase-functions.yml"]
+    paths: ["supabase/functions/**", "supabase/health_records.sql", "supabase/nutrition_logs.sql", ".github/workflows/supabase-functions.yml"]
   workflow_dispatch:
 
 jobs:
@@ -17,9 +17,9 @@ jobs:
       PROJECT_REF: ykfkgmoltgpxjonvomgw
     steps:
       - uses: actions/checkout@v4
-      - name: Create the health_records table
+      - name: Create the health_records and nutrition_logs tables
         run: |
-          jq -n --rawfile q supabase/health_records.sql '{query: $q}' > /tmp/q.json
+          jq -n --rawfile a supabase/health_records.sql --rawfile b supabase/nutrition_logs.sql '{query: ($a + "\n" + $b)}' > /tmp/q.json
           code=$(curl -sS -o /tmp/out.txt -w '%{http_code}' -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
             -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data @/tmp/q.json)
           cat /tmp/out.txt; echo
