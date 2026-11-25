@@ -93,3 +93,10 @@ test("fromInches rounds decimal heights to a whole inch", () => {
   assert.deepEqual(fromInches(71.6), { ft: 6, inch: 0 });
   assert.deepEqual(fromInches(69.4), { ft: 5, inch: 9 });
 });
+
+test("rates show per pound", async () => {
+  const { fmtPerLb } = await import("../lib/nutrition");
+  assert.equal(fmtPerLb(1.6), "0.73");
+  assert.equal(fmtPerLb(9), "4.08");
+  assert.equal(fmtPerLb(2.0), "0.91");
+});

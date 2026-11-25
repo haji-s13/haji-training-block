@@ -14,7 +14,7 @@ import { useFoodLogs } from "@/components/nutrition/use-food-logs";
 import { addDays, mondayOf } from "@/lib/calendar";
 import { dist, isoDate, parseDate } from "@/lib/format";
 import { dayKm } from "@/lib/plan";
-import { burnKcal, dayTargets, GEARS, gearFor, kcalOf, refuel, underFuelled, type FoodLog, type Gear, type Targets } from "@/lib/nutrition";
+import { burnKcal, dayTargets, GEARS, gearFor, kcalOf, refuel, underFuelled, type FoodLog, type Gear, type Targets, fmtPerLb } from "@/lib/nutrition";
 import { fmtWeight } from "@/lib/weight";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +24,6 @@ const MACRO_COLOR = { carbs: "var(--phase-trial)", protein: "var(--phase-base)",
 const today = () => { const d = new Date(); d.setHours(12, 0, 0, 0); return d; };
 const n = (x: number) => Math.round(x).toLocaleString("en-US");
 /** 5.5 → "5.5", 9.0 → "9". */
-const perKg = (x: number) => String(Math.round(x * 10) / 10);
 
 interface FuelDay {
   date: Date;
@@ -118,7 +117,7 @@ export function FuelScreen() {
           <UserRound aria-hidden />
           <AlertTitle className="font-black">Add your weight first</AlertTitle>
           <AlertDescription className="flex flex-col items-start gap-4">
-            <p>Targets are set per kg of body weight. Add your weight on Profile, or connect Health Connect so it syncs.</p>
+            <p>Targets are set per pound of body weight. Add your weight on Profile, or connect Health Connect so it syncs.</p>
             <Button variant="outline" onClick={() => setScreen("paces")}>Open Profile</Button>
           </AlertDescription>
         </Alert>
@@ -172,8 +171,8 @@ function DayTargets({ day, kg, isToday, log }: { day: FuelDay; kg: number; isTod
   const proteinKg = Math.max(settings.nutrition.proteinPerKg, GEARS[day.gear].protein);
   const r = refuel(kg);
   const macros = [
-    { k: "Carbs", eaten: log?.carbs, target: t.carbs, color: MACRO_COLOR.carbs, note: `${perKg(t.carbs / kg)} g/kg · ${GEARS[day.gear].label} gear` },
-    { k: "Protein", eaten: log?.protein, target: t.protein, color: MACRO_COLOR.protein, note: `${perKg(proteinKg)} g/kg · 20–40 g every 3–4 h` },
+    { k: "Carbs", eaten: log?.carbs, target: t.carbs, color: MACRO_COLOR.carbs, note: `${fmtPerLb(t.carbs / kg)} g/lb · ${GEARS[day.gear].label} gear` },
+    { k: "Protein", eaten: log?.protein, target: t.protein, color: MACRO_COLOR.protein, note: `${fmtPerLb(proteinKg)} g/lb · 20–40 g every 3–4 h` },
     { k: "Fat", eaten: log?.fat, target: t.fat, color: MACRO_COLOR.fat, note: `${Math.round(((t.fat * 9) / t.kcal) * 100)}% of energy · never under 20%` },
   ];
   const training = [
@@ -197,7 +196,7 @@ function DayTargets({ day, kg, isToday, log }: { day: FuelDay; kg: number; isTod
       </section>
 
       <Card className="gap-4 py-6">
-        <CardHeader className="px-4 md:px-6"><CardTitle className="text-meta uppercase">Macros · <span className="num">{fmtWeight(kg, settings.weightUnit ?? "lb")}</span></CardTitle></CardHeader>
+        <CardHeader className="px-4 md:px-6"><CardTitle className="text-meta uppercase">Macros · <span className="num">{fmtWeight(kg, "lb")}</span></CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-6 px-4 md:px-6">
           {macros.map((m) => (
             <div key={m.k} className="flex flex-col gap-2">
@@ -221,8 +220,8 @@ function DayTargets({ day, kg, isToday, log }: { day: FuelDay; kg: number; isTod
             <p className="max-w-[65ch] text-muted-foreground">Sessions under 8 hours apart: refuel fast for the first 4 hours after the morning run.</p>
             {[
               ["Before AM", "Snack, never fasted", `${r.beforeAm[0]}–${r.beforeAm[1]} g carbs`],
-              ["0–4 h after AM", "1.0–1.2 g/kg an hour, low fibre", `${r.perHourAfterAm[0]}–${r.perHourAfterAm[1]} g/h`],
-              ["After PM", "Carbs + 0.3 g/kg protein", `${r.proteinAfterPm} g protein`],
+              ["0–4 h after AM", `${fmtPerLb(1)}–${fmtPerLb(1.2)} g/lb an hour, low fibre`, `${r.perHourAfterAm[0]}–${r.perHourAfterAm[1]} g/h`],
+              ["After PM", `Carbs + ${fmtPerLb(0.3)} g/lb protein`, `${r.proteinAfterPm} g protein`],
             ].map(([a, b, c]) => (
               <div key={a} className="flex items-start justify-between gap-4 border-b pb-4 last:border-0 last:pb-0">
                 <div className="flex flex-col"><span className="font-black">{a}</span><span className="font-extralight text-muted-foreground">{b}</span></div>
@@ -324,7 +323,7 @@ function WeekList({ days, kg, logs }: { days: FuelDay[]; kg: number; logs: Recor
               <div className="flex min-w-0 flex-col gap-1">
                 <span className="truncate">{GEARS[d.gear].label}</span>
                 <span className="truncate font-extralight text-muted-foreground">{what}</span>
-                <span className="num text-meta text-muted-foreground">{perKg(t.carbs / kg)} g/kg carbs</span>
+                <span className="num text-meta text-muted-foreground">{fmtPerLb(t.carbs / kg)} g/lb carbs</span>
                 {eaten !== null && <Bar value={eaten} target={t.kcal} color="var(--primary)" />}
               </div>
               <span className="num text-right">

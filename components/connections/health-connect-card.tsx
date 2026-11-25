@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useApp } from "@/components/app-provider";
 import { healthUrl, newHealthKey } from "@/lib/health";
 import { useHealthKey } from "@/components/connections/use-health-key";
 import { cn } from "@/lib/utils";
@@ -29,10 +28,8 @@ function CopyField({ id, label, value, secret }: { id: string; label: string; va
 
 /** Google Health Connect: the phone sends weight (from Renpho) and sleep here through the HC Webhook app. */
 export function HealthConnectCard() {
-  const { settings, update } = useApp();
   const { key, setKey, ready } = useHealthKey();
   const [confirmNew, setConfirmNew] = useState(false);
-  const unit = settings.weightUnit || "lb";
   return (
     <section className="flex flex-col gap-4 rounded-lg border bg-card p-4 md:p-6">
       <div className="flex items-center gap-2">
@@ -72,17 +69,6 @@ export function HealthConnectCard() {
         </>
       )}
 
-      <div className="flex flex-wrap items-center gap-4">
-        <span>Show weight in</span>
-        <div className="inline-flex rounded-lg bg-muted p-1" role="group" aria-label="Weight unit">
-          {(["lb", "kg"] as const).map((u) => (
-            <button key={u} type="button" aria-pressed={unit === u} onClick={() => update({ weightUnit: u })}
-              className={cn("h-10 min-w-16 rounded-md px-3 md:h-8", unit === u ? "bg-card font-black text-foreground" : "text-muted-foreground hover:text-foreground")}>
-              {u}
-            </button>
-          ))}
-        </div>
-      </div>
     </section>
   );
 }

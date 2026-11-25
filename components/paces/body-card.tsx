@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApp } from "@/components/app-provider";
 import { useBodyWeight } from "@/components/nutrition/use-body-weight";
-import { ACTIVITY_LABELS, GEARS, GOAL_KCAL, fromInches, toInches, type Activity, type Goal, type NutritionSettings, type Sex } from "@/lib/nutrition";
+import { ACTIVITY_LABELS, GEARS, GOAL_KCAL, fromInches, toInches, type Activity, type Goal, type NutritionSettings, type Sex, fmtPerLb } from "@/lib/nutrition";
 import { fmtWeight, KG_PER_LB } from "@/lib/weight";
 
 const GOALS: { value: Goal; label: string }[] = [
@@ -137,14 +137,14 @@ export function BodyCard() {
             <p id="body-fat-note" className="text-meta uppercase text-muted-foreground">You enter this</p>
           </div>
           <div className="col-span-2 flex flex-col gap-2">
-            <Label htmlFor="body-protein">Protein (g per kg of body weight)</Label>
-            <NumField id="body-protein" value={protein} digits={1} min={1} max={3} required aria-describedby="body-protein-note"
-              onSave={(v) => { if (v !== undefined) set({ proteinPerKg: v }); }} />
+            <Label htmlFor="body-protein">Protein (g per lb of body weight)</Label>
+            <NumField id="body-protein" value={Number(fmtPerLb(protein))} digits={2} min={Number(fmtPerLb(1))} max={Number(fmtPerLb(3))} required aria-describedby="body-protein-note"
+              onSave={(v) => { if (v !== undefined) set({ proteinPerKg: Math.round((v / KG_PER_LB) * 100) / 100 }); }} />
             <p id="body-protein-note" className="max-w-[65ch] font-extralight text-muted-foreground">
               {kg && lb ? (
-                <><span className="num">{protein.toFixed(1)}</span> g/kg = <span className="num">{Math.round(protein * kg)}</span> g a day at <span className="num">{lb}</span> lb. </>
-              ) : <><span className="num">{protein.toFixed(1)}</span> g per kg of body weight. </>}
-              Hard days go up to <span className="num">{GEARS.hard.protein.toFixed(1)}</span>, double threshold days to <span className="num">{GEARS.double.protein.toFixed(1)}</span>.
+                <><span className="num">{fmtPerLb(protein)}</span> g/lb = <span className="num">{Math.round(protein * kg)}</span> g a day at <span className="num">{lb}</span> lb. </>
+              ) : <><span className="num">{fmtPerLb(protein)}</span> g per lb of body weight. </>}
+              Hard days go up to <span className="num">{fmtPerLb(GEARS.hard.protein)}</span>, double threshold days to <span className="num">{fmtPerLb(GEARS.double.protein)}</span>.
             </p>
           </div>
           <div className="col-span-2 flex flex-col gap-2">

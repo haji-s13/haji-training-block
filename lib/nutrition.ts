@@ -103,6 +103,10 @@ export function dayTargets(gear: Gear, kg: number, n: Pick<NutritionSettings, "p
 }
 
 export const lbToKg = (lb: number) => lb * KG_PER_LB;
+/** A per-kg rate (g/kg) as per pound (g/lb). The app shows every rate per lb. */
+export const perLb = (perKg: number) => perKg * KG_PER_LB;
+/** "0.73": a per-lb rate to two decimals. */
+export const fmtPerLb = (perKg: number) => perLb(perKg).toFixed(2);
 
 /** Height from feet and inches. */
 export const toInches = (ft: number, inch: number) => ft * 12 + inch;
