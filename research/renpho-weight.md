@@ -1,5 +1,24 @@
 # Renpho scale weight in the app
 
+## Update 2 (25 Nov 2026): Health Connect, not Renpho login
+
+The direct Renpho login (below) worked but signed Haji's Renpho phone app out, and the phone app
+then invalidated the site's session: Renpho allows one session per account, and the phone app must
+stay signed in for the scale to upload. Haji is on Android and asked for weight and sleep from
+Google's health app instead.
+
+- Google Fit REST APIs: no new sign-ups since 1 May 2024, supported "until the end of 2026"
+  (https://developers.google.com/fit, https://developer.android.com/health-and-fitness/health-connect/migration/fit/faq).
+- Health Connect is on-device only; no web API. The Google Health API (https://developers.google.com/health)
+  serves Fitbit/Pixel data, uses Restricted scopes needing a security review, and doesn't yet carry
+  third-party Health Connect data such as Renpho's.
+- Chosen: the open-source **HC Webhook** Android app (https://github.com/mcnaveen/health-connect-webhook,
+  Play Store id `com.hcwebhook.app`) posts Health Connect data as JSON every 15+ minutes:
+  `weight: [{kilograms, time}]`, `sleep: [{session_end_time, duration_seconds, stages: [{stage, start_time, end_time, duration_seconds}]}]`,
+  with custom headers. The `health` Edge Function stores it; the Dashboard reads it.
+- Stage names aren't documented ("enum toString()"); `lib/sleep.ts` accepts names or Health Connect's numbers.
+
+
 **Date:** 25 Nov 2026
 **Question:** How can weigh-ins from a Renpho smart scale reach the dashboard automatically?
 

@@ -99,17 +99,17 @@ The first time someone signs in after this, their newest plan from the old "My p
 copied into their account settings. The old `plans` table is no longer used by the app and can
 be kept or dropped.
 
-## Renpho connection (Edge Function)
+## Weight and sleep from Health Connect (Edge Function)
 
-Browsers can't call Renpho's servers directly, so the Dashboard weight card goes through a small
-Edge Function, `supabase/functions/renpho`. It stores nothing: the password is passed to Renpho once
-to get a session token, and the app keeps only that token on the device.
+The Dashboard's Weight and Sleep cards read from the `health` Edge Function
+(`supabase/functions/health`). The phone's HC Webhook app posts Health Connect data to it with a
+private key (header `X-Health-Key`); only a SHA-256 hash of the key is stored, in the
+`health_records` table (`supabase/health_records.sql`), which browsers can't read directly.
 
-Deploy it once (and after any change to it), either way:
+The **Supabase functions** GitHub workflow creates the table and deploys the function on every push to
+`main` that touches them (repo secret `SUPABASE_ACCESS_TOKEN` from supabase.com → Account → Access
+Tokens). By hand: run `supabase/health_records.sql` in the SQL Editor, then
+`npx supabase functions deploy health --no-verify-jwt --project-ref ykfkgmoltgpxjonvomgw`.
 
-- **GitHub:** add the repo secret `SUPABASE_ACCESS_TOKEN` (supabase.com → Account → Access Tokens),
-  then run **Actions → Supabase functions → Run workflow**. Later changes deploy on push to `main`.
-- **Your computer:** `npx supabase functions deploy renpho --no-verify-jwt --project-ref ykfkgmoltgpxjonvomgw`
-
-`--no-verify-jwt` is needed because guests use it too and the publishable key isn't a JWT. The
-function only allows requests from `https://haji-s13.github.io` and `http://localhost:3000`.
+The older `renpho` function (direct Renpho login) is no longer used; delete it from the Supabase
+dashboard if you like.

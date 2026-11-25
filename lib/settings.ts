@@ -44,10 +44,10 @@ export interface Settings {
   /** Bakken: below this weekly volume (display units) only the first double day stays double. */
   lowMileage: number;
   icuAthlete?: string;
-  /** Body weight unit on the Dashboard (Renpho). Default lb. */
+  /** Body weight unit on the Dashboard. Default lb. */
   weightUnit?: "lb" | "kg";
-  /** Renpho account region code (e.g. US, GB). */
-  renphoArea?: string;
+  /** Private key the phone uses to send Health Connect weight and sleep (the `health` Edge Function). */
+  healthKey?: string;
   /** 5k test results, each recorded at the end of `period` (0-based); they set the paces of later periods. */
   paceTests?: { period: number; time: string }[];
   /** HYROX station program. Shares startDate with the run plan and saves with it. */
