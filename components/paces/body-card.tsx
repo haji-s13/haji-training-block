@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApp } from "@/components/app-provider";
 import { useBodyWeight } from "@/components/nutrition/use-body-weight";
-import { ACTIVITY_LABELS, deficitOf, GEARS, GOAL_KCAL, MAX_DEFICIT, MIN_DEFICIT, fromInches, toInches, type Activity, type Goal, type NutritionSettings, type Sex, fmtPerLb } from "@/lib/nutrition";
+import { ACTIVITY_LABELS, EA_FLOOR, GAIN_RATE, gainRateOf, GEARS, LOSE_RATE, loseRateOf, MAX_DAY_SURPLUS, fromInches, toInches, type Activity, type Goal, type NutritionSettings, type Sex, fmtPerLb } from "@/lib/nutrition";
 import { fmtWeight, KG_PER_LB } from "@/lib/weight";
 
 const GOALS: { value: Goal; label: string }[] = [
@@ -85,9 +85,9 @@ export function BodyCard() {
 
   return (
     <CollapsibleCard storageKey="body" title="Body & Nutrition"
-      summary={[lb ? `${lb} lb` : null, n.bodyFat ? `${n.bodyFat}% body fat` : null, n.goal === "lose" ? `Lose · −${deficitOf(n)} kcal on easy days` : `${n.goal[0].toUpperCase()}${n.goal.slice(1)}`].filter(Boolean).join(" · ")}>
+      summary={[lb ? `${lb} lb` : null, n.bodyFat ? `${n.bodyFat}% body fat` : null, n.goal === "lose" ? `Lose ${loseRateOf(n)}% a week` : n.goal === "gain" ? `Gain ${gainRateOf(n)}% a week` : "Maintain"].filter(Boolean).join(" · ")}>
         <p className="max-w-[65ch] font-extralight text-muted-foreground">
-          Fuel targets come from your weight and the day&apos;s training. Body fat, height, age and sex only feed the estimated daily burn shown on Fuel.
+          Fuel targets come from your weight and the day&apos;s training. Sex, birth year and height (or body fat) give an estimated burn, which Lose and Gain aim at. Body fat also sets your lean mass, which decides how far a day can be cut.
         </p>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <div className="flex flex-col gap-2">
@@ -165,19 +165,21 @@ export function BodyCard() {
                   onClick={() => set({ goal: g.value })}>{g.label}</Button>
               ))}
             </div>
-            {n.goal === "lose" && (
+            {n.goal !== "maintain" && (
               <div className="flex flex-col gap-2 pt-2">
-                <Label htmlFor="body-deficit">Daily deficit (kcal)</Label>
-                <NumField id="body-deficit" value={deficitOf(n)} min={MIN_DEFICIT} max={MAX_DEFICIT} required aria-describedby="body-goal-note"
-                  onSave={(v) => { if (v !== undefined) set({ deficit: Math.round(v) }); }} />
+                <Label htmlFor="body-rate">{n.goal === "lose" ? "Target loss" : "Target gain"} (% of body weight a week)</Label>
+                <NumField id="body-rate" digits={2} required aria-describedby="body-goal-note"
+                  value={n.goal === "lose" ? loseRateOf(n) : gainRateOf(n)}
+                  min={n.goal === "lose" ? LOSE_RATE.min : GAIN_RATE.min} max={n.goal === "lose" ? LOSE_RATE.max : GAIN_RATE.max}
+                  onSave={(v) => { if (v !== undefined) set(n.goal === "lose" ? { loseRate: v } : { gainRate: v }); }} />
               </div>
             )}
             <p id="body-goal-note" className="max-w-[65ch] font-extralight text-muted-foreground">
               {n.goal === "lose"
-                ? <>Takes <span className="num">{deficitOf(n)}</span> kcal off rest and easy days only (<span className="num">{MIN_DEFICIT}</span>–<span className="num">{MAX_DEFICIT}</span>). Hard and double threshold days stay fully fuelled.</>
+                ? <><span className="num">{loseRateOf(n)}%</span>{kg && <> is about <span className="num">{((loseRateOf(n) / 100) * kg / KG_PER_LB).toFixed(1)}</span> lb a week</>} (<span className="num">{LOSE_RATE.min}</span>–<span className="num">{LOSE_RATE.max}%</span>; 0.5–1% keeps the most muscle). The cut comes off rest and easy days first, never taking a day below {EA_FLOOR} kcal per kg of lean mass, then off hard-day carbs down to the bottom of their band. Fuel shows if your training leaves less room.</>
                 : n.goal === "gain"
-                  ? <>Adds <span className="num">{GOAL_KCAL}</span> kcal of carbs every day.</>
-                  : <>Lose takes a deficit you set off rest and easy days; Gain adds <span className="num">{GOAL_KCAL}</span> kcal of carbs every day.</>}
+                  ? <><span className="num">{gainRateOf(n)}%</span>{kg && <> is about <span className="num">{((gainRateOf(n) / 100) * kg / KG_PER_LB).toFixed(1)}</span> lb a week</>} (<span className="num">{GAIN_RATE.min}</span>–<span className="num">{GAIN_RATE.max}%</span>). The surplus goes on rest and easy days first, half carbs and half fat, at most <span className="num">{MAX_DAY_SURPLUS}</span> kcal a day.</>
+                  : <>Lose and Gain take a target rate in % of body weight a week and spread it over the week.</>}
             </p>
           </div>
         </div>
