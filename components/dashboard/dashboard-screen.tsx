@@ -9,6 +9,7 @@ import { DayCell } from "@/components/builder/day-cell";
 import { HyroxDayRow } from "@/components/hyrox/hyrox-day-row";
 import { useHxSend } from "@/components/hyrox/use-hx-send";
 import { HealthCards } from "@/components/dashboard/health-cards";
+import { FuelSummary } from "@/components/dashboard/fuel-summary";
 import { addDays, mondayOf } from "@/lib/calendar";
 import { dist, fmtDuration, isoDate, parseDate } from "@/lib/format";
 import { dayKm, daySec } from "@/lib/plan";
@@ -82,6 +83,8 @@ export function DashboardScreen() {
           Run <span className="font-black text-foreground">{dist(totals.km, settings.units)}</span> · ~{fmtDuration(totals.runSec)} · Lifting <span className="font-black text-foreground">~{fmtDuration(totals.hxMin * 60)}</span>
         </p>
       </section>
+
+      <FuelSummary date={selDate} />
 
       <HealthCards />
 

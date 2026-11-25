@@ -13,8 +13,8 @@ import { useBodyWeight } from "@/components/nutrition/use-body-weight";
 import { useFoodLogs } from "@/components/nutrition/use-food-logs";
 import { addDays, mondayOf } from "@/lib/calendar";
 import { dist, isoDate, parseDate } from "@/lib/format";
-import { dayKm } from "@/lib/plan";
-import { burnKcal, dayTargets, GEARS, gearFor, kcalOf, refuel, underFuelled, type FoodLog, type Gear, type Targets, fmtPerLb } from "@/lib/nutrition";
+import { fuelDay, type FuelDay } from "@/lib/fuel-day";
+import { burnKcal, GEARS, kcalOf, refuel, underFuelled, type FoodLog, type Gear, fmtPerLb } from "@/lib/nutrition";
 import { fmtWeight } from "@/lib/weight";
 import { cn } from "@/lib/utils";
 
@@ -25,17 +25,6 @@ const today = () => { const d = new Date(); d.setHours(12, 0, 0, 0); return d; }
 const n = (x: number) => Math.round(x).toLocaleString("en-US");
 /** 5.5 → "5.5", 9.0 → "9". */
 
-interface FuelDay {
-  date: Date;
-  iso: string;
-  inPlan: boolean;
-  gear: Gear;
-  runTitle: string | null;
-  runKm: number;
-  lift: { title: string; min: number } | null;
-  targets: Targets | null;
-}
-
 function Bar({ value, target, color }: { value: number; target: number; color: string }) {
   const pct = target > 0 ? Math.min(100, (value / target) * 100) : 0;
   return (
@@ -45,34 +34,25 @@ function Bar({ value, target, color }: { value: number; target: number; color: s
   );
 }
 
+/** A day for the Fuel tab to open on next time it mounts (set by the Dashboard summary). */
+let pendingDay: string | null = null;
+export function openFuelOn(iso: string) { pendingDay = iso; }
+
 /** Daily fuel targets that follow the run and lifting plans, and a log of what was eaten. */
 export function FuelScreen() {
   const { plan, hyrox, calendar, settings, setScreen } = useApp();
   const { kg } = useBodyWeight();
-  const [sel, setSel] = useState(() => isoDate(today()));
+  const [sel, setSel] = useState(() => pendingDay ?? isoDate(today()));
+  useEffect(() => { pendingDay = null; }, []);
   const selDate = parseDate(sel) || today();
   const weekStart = mondayOf(selDate);
   const from = isoDate(weekStart);
   const to = isoDate(addDays(weekStart, 6));
   const food = useFoodLogs(from, to);
-  const start = calendar.weeks[0].start;
 
-  const days = useMemo<FuelDay[]>(() => Array.from({ length: 7 }, (_, k) => {
-    const date = addDays(parseDate(from) || today(), k);
-    const off = Math.round((date.getTime() - start.getTime()) / 86400000);
-    const at = off >= 0 && off < calendar.weeks.length * 7 ? { w: Math.floor(off / 7), i: off % 7 } : null;
-    const run = at ? plan?.weeks[at.w]?.days[at.i] : undefined;
-    const hx = at ? hyrox.weeks[at.w]?.days[at.i] : undefined;
-    const gear = gearFor(run?.type);
-    const lift = hx && (hx.type === "upper" || hx.type === "lower") ? { title: hx.title, min: hx.min } : null;
-    return {
-      date, iso: isoDate(date), inPlan: !!at, gear,
-      runTitle: run ? run.title : null,
-      runKm: run ? dayKm(run) : 0,
-      lift,
-      targets: kg ? dayTargets(gear, kg, settings.nutrition) : null,
-    };
-  }), [from, start, calendar, plan, hyrox, kg, settings.nutrition]);
+  const days = useMemo<FuelDay[]>(() => Array.from({ length: 7 }, (_, k) =>
+    fuelDay(addDays(parseDate(from) || today(), k), calendar, plan, hyrox, kg, settings.nutrition)),
+  [from, calendar, plan, hyrox, kg, settings.nutrition]);
 
   const day = days.find((d) => d.iso === sel) ?? days[0];
   const isToday = sel === isoDate(today());
