@@ -7,7 +7,7 @@ and shadcn/ui. Design rules are in [DESIGN.md](DESIGN.md).
 ## What it does
 
 - **Home**: sign in, create an account or continue as a guest.
-- **Dashboard**: pick a day and see its run and HYROX session, or the next 3 or 7 days.
+- **Dashboard**: pick a day and see its run and lifting session, or the next 3 or 7 days. Tap Complete on a run or lift to mark it done: the day gets a check mark in the week strip (saved with your account; guests' aren't saved).
 - **Run**: Norwegian Singles run plan, or Marius Bakken's Norwegian Method (two double threshold days, an X session, flat weeks, race-week checks; rules in [research/norwegian-method-bakken.md](research/norwegian-method-bakken.md)).
   - Weeks in 4-week blocks, three blocks to a 12-week period.
   - Mileage ramps (at most 5% a week) only in the periods you pick; other periods hold steady.

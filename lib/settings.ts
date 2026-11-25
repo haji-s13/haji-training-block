@@ -2,6 +2,7 @@ import { nextMonday, type Units } from "./format";
 import { defaultHyrox, normalizeHyrox, type HyroxSettings } from "./hyrox";
 import { defaultLifting, normalizeLifting, type LiftSettings } from "./lifting";
 import { defaultNutrition, normalizeNutrition, type NutritionSettings } from "./nutrition";
+import { normalizeCompleted, type Completed } from "./completed";
 import { addDays, defaultEnd, mondayOf, newId, type Race, type Vacation } from "./calendar";
 import { isoDate, parseDate } from "./format";
 import { buildModel } from "./vdot";
@@ -57,6 +58,8 @@ export interface Settings {
   lifting: LiftSettings;
   /** Body details and goal for the Fuel tab. */
   nutrition: NutritionSettings;
+  /** Sessions marked complete on the Dashboard. */
+  completed?: Completed;
 }
 
 export const SESSION_LABELS: Record<SessionType, string> = {
@@ -125,6 +128,7 @@ export function normalizeSettings(raw: unknown): Settings {
   s.hyrox = normalizeHyrox(s.hyrox);
   s.lifting = normalizeLifting(s.lifting);
   s.nutrition = normalizeNutrition(s.nutrition);
+  s.completed = normalizeCompleted(s.completed);
   // Older saves were always 12 weeks with the race in week 12.
   const raw0 = (raw && typeof raw === "object" ? raw : {}) as Partial<Settings> & { hyrox?: { finalWeek?: string; raceDay?: number } };
   if (!raw0.endDate) s.endDate = defaultEnd(s.startDate);

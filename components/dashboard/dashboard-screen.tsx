@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Flag, Palmtree } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Flag, Palmtree } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/components/app-provider";
 import { TestPrompt } from "@/components/plans/test-prompt";
@@ -14,6 +14,7 @@ import { addDays, mondayOf } from "@/lib/calendar";
 import { dist, fmtDuration, isoDate, parseDate } from "@/lib/format";
 import { dayKm, daySec } from "@/lib/plan";
 import { cn } from "@/lib/utils";
+import { isDone, toggleDone, type DoneKind } from "@/lib/completed";
 
 const VIEWS = [1, 3, 7] as const;
 type View = (typeof VIEWS)[number];
@@ -34,7 +35,9 @@ const sameDay = (a: Date, b: Date) => isoDate(a) === isoDate(b);
 
 /** Pick a day, see that day's run and lifting session (or the next 3 or 7 days). */
 export function DashboardScreen() {
-  const { plan, hyrox, calendar, settings } = useApp();
+  const { plan, hyrox, calendar, settings, update } = useApp();
+  const done = (d: Date, kind: DoneKind) => isDone(settings.completed, isoDate(d), kind);
+  const toggle = (d: Date, kind: DoneKind) => update((s) => ({ completed: toggleDone(s.completed, isoDate(d), kind) }));
   const { sendIcu, busy } = useHxSend();
   const start = calendar.weeks[0].start;
   const planEnd = addDays(calendar.weeks[calendar.weeks.length - 1].start, 6);
@@ -115,7 +118,7 @@ export function DashboardScreen() {
               const off = at && calendar.weeks[at.w].off[at.i];
               return (
                 <button key={isoDate(d)} type="button" onClick={() => setSel(isoDate(d))} aria-pressed={selected}
-                  aria-label={d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
+                  aria-label={`${d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}${done(d, "run") ? ", run done" : ""}${done(d, "lift") ? ", lifting done" : ""}`}
                   className={cn("flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border px-0 py-2 focus-visible:outline-2 focus-visible:outline-ring",
                     selected ? "border-signal bg-signal text-signal-foreground" : inView ? "border-signal bg-signal-soft" : "hover:bg-accent/60",
                     !at && "opacity-40")}>
@@ -123,8 +126,12 @@ export function DashboardScreen() {
                   <span className={cn("num leading-5 font-black", sameDay(d, today()) && !selected && "text-signal")}>{d.getDate()}</span>
                   <span className="flex h-2 items-center gap-0.5" aria-hidden>
                     {race ? <Flag className="size-3" /> : off ? <Palmtree className="size-3" /> : <>
-                      {run && run.km > 0 && <span className={cn("size-1.5 rounded-full", selected ? "bg-signal-foreground" : RUN_DOT[run.type])} />}
-                      {hx && HX_DOT[hx.type] && hx.blocks.length > 0 && <span className={cn("size-1.5 rounded-sm", selected ? "bg-signal-foreground" : HX_DOT[hx.type])} />}
+                      {run && run.km > 0 && (done(d, "run")
+                        ? <Check className={cn("size-3 stroke-[3]", selected ? "" : "text-status-ok")} />
+                        : <span className={cn("size-1.5 rounded-full", selected ? "bg-signal-foreground" : RUN_DOT[run.type])} />)}
+                      {hx && HX_DOT[hx.type] && hx.blocks.length > 0 && (done(d, "lift")
+                        ? <Check className={cn("size-3 stroke-[3]", selected ? "" : "text-status-ok")} />
+                        : <span className={cn("size-1.5 rounded-sm", selected ? "bg-signal-foreground" : HX_DOT[hx.type])} />)}
                     </>}
                   </span>
                 </button>
@@ -136,6 +143,7 @@ export function DashboardScreen() {
         <p className="text-meta text-muted-foreground">
           <span className="mr-1 inline-block size-1.5 rounded-full bg-muted-foreground align-middle" aria-hidden /> run
           <span className="mr-1 ml-4 inline-block size-1.5 rounded-sm bg-muted-foreground align-middle" aria-hidden /> Lifting
+          <Check className="mr-1 ml-4 inline-block size-3 stroke-[3] align-middle text-status-ok" aria-hidden />done
           <span className="ml-4">Plan {start.toLocaleDateString(undefined, { day: "numeric", month: "short" })} – {planEnd.toLocaleDateString(undefined, { day: "numeric", month: "short" })}</span>
         </p>
       </section>
@@ -157,9 +165,9 @@ export function DashboardScreen() {
                 <p className="p-4 text-muted-foreground md:px-6">Outside your plan dates. Change them on Profile.</p>
               ) : (
                 <div className="grid gap-0.5">
-                  <p className="px-4 pt-4 text-meta uppercase text-muted-foreground md:px-6">Run</p>
+                  <SectionHead label="Run" show={!!wk && wk.days[at.i].km > 0} done={done(d, "run")} onToggle={() => toggle(d, "run")} />
                   {wk ? <DayCell wk={wk} i={at.i} /> : <p className="px-4 pb-4 text-muted-foreground md:px-6">Enter your PB on Profile to see runs.</p>}
-                  <p className="px-4 pt-4 text-meta uppercase text-muted-foreground md:px-6">Lifting</p>
+                  <SectionHead label="Lifting" show={!!hw && (hw.days[at.i].type === "upper" || hw.days[at.i].type === "lower")} done={done(d, "lift")} onToggle={() => toggle(d, "lift")} />
                   {hw && <HyroxDayRow hideRun wk={hw} i={at.i} busy={busy === `dash-${at.w}-${at.i}`} onIcu={() => sendIcu(`dash-${at.w}-${at.i}`, [{ wk: hw, i: at.i }], `week ${hw.n}`)} />}
                 </div>
               )}
@@ -167,6 +175,25 @@ export function DashboardScreen() {
           );
         })}
       </section>
+    </div>
+  );
+}
+
+/** A section label with a round complete toggle when there's a session to complete. */
+function SectionHead({ label, show, done, onToggle }: { label: string; show: boolean; done: boolean; onToggle: () => void }) {
+  return (
+    <div className="flex min-h-12 items-center justify-between gap-4 px-4 pt-4 md:px-6">
+      <p className="text-meta uppercase text-muted-foreground">{label}</p>
+      {show && (
+        <button type="button" aria-pressed={done} onClick={onToggle}
+          aria-label={done ? `${label} done. Tap to undo` : `Mark ${label.toLowerCase()} complete`}
+          className="group -my-2 -mr-2 flex size-12 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-ring">
+          <span className={cn("flex size-8 items-center justify-center rounded-full border-2 transition-colors",
+            done ? "border-status-ok bg-status-ok text-background" : "border-border text-transparent group-hover:border-status-ok group-hover:text-status-ok")}>
+            <Check className="size-4 stroke-[3]" aria-hidden />
+          </span>
+        </button>
+      )}
     </div>
   );
 }
