@@ -143,7 +143,9 @@ export function BodyCard() {
               {kg && lb ? (
                 <><span className="num">{fmtPerLb(protein)}</span> g/lb = <span className="num">{Math.round(protein * kg)}</span> g a day at <span className="num">{lb}</span> lb. </>
               ) : <><span className="num">{fmtPerLb(protein)}</span> g per lb of body weight. </>}
-              Hard days go up to <span className="num">{fmtPerLb(GEARS.hard.protein)}</span>, double threshold days to <span className="num">{fmtPerLb(GEARS.double.protein)}</span>.
+              {protein < GEARS.double.protein
+                ? <>Hard days go up to at least <span className="num">{fmtPerLb(GEARS.hard.protein)}</span>, double threshold days to <span className="num">{fmtPerLb(GEARS.double.protein)}</span>.</>
+                : <>The same every day, hard and double threshold days included.</>}
             </p>
           </div>
           <div className="col-span-2 flex flex-col gap-2">
