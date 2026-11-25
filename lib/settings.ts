@@ -140,7 +140,7 @@ export function testForPeriod(s: Settings, p: number): { period: number; time: s
 }
 
 /** Where an older version kept settings in the browser; read once to carry them into an account, then removed. */
-export const STORAGE_KEY = "nsm-planner-v1";
+export const STORAGE_KEY = "htb-planner-v1";
 
 export function templateWarnings(t: SessionType[]): string[] {
   const warns: string[] = [];

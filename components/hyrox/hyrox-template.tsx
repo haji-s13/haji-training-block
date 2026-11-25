@@ -9,7 +9,7 @@ import { useApp } from "@/components/app-provider";
 import { SLOT_LABELS, type HxSlot } from "@/lib/hyrox";
 import { BAKKEN_LABELS, DAYS, SESSION_LABELS } from "@/lib/settings";
 
-const OPEN_KEY = "nsm-hx-template-collapsed";
+const OPEN_KEY = "htb-hx-template-collapsed";
 
 /** Which station session goes on which day, with the run plan's session for that day underneath. */
 export function HyroxTemplateCard() {

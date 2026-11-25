@@ -13,7 +13,7 @@ export function hxIcuEvent(wk: HxWeek, i: number): IcuEvent {
   const day = isoDate(hxDayDate(wk, i));
   return {
     category: "WORKOUT", type: "WeightTraining", start_date_local: `${day}T00:00:00`, name: `HYROX · ${d.title}`,
-    description: hxDayText(wk, d), external_id: `nsm-hx-${day}`, moving_time: Math.round(d.min * 60),
+    description: hxDayText(wk, d), external_id: `htb-hx-${day}`, moving_time: Math.round(d.min * 60),
   };
 }
 

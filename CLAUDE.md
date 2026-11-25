@@ -4,7 +4,7 @@ Guidance for Claude Code in this repo.
 
 ## Project
 
-HYROX + Norwegian Singles Method planner. Next.js (App Router, static export), Tailwind v4,
+Haji Training Block: a HYROX + Norwegian Singles Method planner (a copy of haji-s13/NSM). Next.js (App Router, static export), Tailwind v4,
 shadcn/ui, Supabase for accounts. See [README.md](README.md) for features and
 [DESIGN.md](DESIGN.md) for UI rules (DESIGN.md wins over defaults; the user's words win over DESIGN.md).
 

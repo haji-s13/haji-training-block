@@ -13,7 +13,7 @@ import { periodVolume } from "@/lib/settings";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const OPEN_KEY = "nsm-settings-collapsed";
+const OPEN_KEY = "htb-settings-collapsed";
 
 function Field({ id, label, hint, children }: { id: string; label: string; hint?: string; children: React.ReactNode }) {
   return (

@@ -37,7 +37,7 @@ export function WeekTemplate() {
   );
 }
 
-const OPEN_KEY = "nsm-template-collapsed";
+const OPEN_KEY = "htb-template-collapsed";
 
 /** Weekly template in a collapsible card. */
 export function WeekTemplateCard() {

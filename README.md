@@ -1,4 +1,4 @@
-# HYROX + Norwegian Singles Method
+# Haji Training Block
 
 Sub-threshold pace ranges from a 5k or 10k PB, a 12-week Norwegian Singles run plan, a 12-week
 HYROX station program, and one-click sending to COROS or intervals.icu. Built with Next.js (App Router, static export), Tailwind CSS v4
@@ -32,7 +32,7 @@ npm run typecheck
 
 ## Build and deploy
 
-`npm run build` writes a static site to `out/`. It's served under `/NSM` by default; set
+`npm run build` writes a static site to `out/`. It's served under `/haji-training-block` by default; set
 `NEXT_PUBLIC_BASE_PATH=""` to serve it from a root.
 
 GitHub Pages deploys from `.github/workflows/deploy.yml` on every push to `main`. One-time

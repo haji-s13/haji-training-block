@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AppProvider } from "@/components/app-provider";
 
 export const metadata: Metadata = {
-  title: "HYROX + Norwegian Singles Method",
+  title: "Haji Training Block",
   description: "Sub-threshold run paces and a 12-week Norwegian Singles plan, plus a 12-week HYROX station program that targets your weak stations.",
 };
 

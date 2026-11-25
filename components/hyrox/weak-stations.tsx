@@ -11,7 +11,7 @@ import { STATION, STATIONS, weakFor, type Station } from "@/lib/hyrox";
 import { fmtShortDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const OPEN_KEY = "nsm-hx-weak-collapsed";
+const OPEN_KEY = "htb-hx-weak-collapsed";
 
 /** Pick weak stations: each gets more volume and one extra block a week. Runs are left to the run plan. */
 export function WeakStations() {

@@ -55,7 +55,7 @@ export function inCorosWindow(date: Date): boolean {
 }
 
 /* ---------------------------------------------------------------- sent tracking (per device) */
-const SENT_KEY = "nsm-coros-sent";
+const SENT_KEY = "htb-coros-sent";
 export function corosSent(): Record<string, number> {
   try { return JSON.parse(localStorage.getItem(SENT_KEY) || "{}"); } catch { return {}; }
 }
@@ -91,8 +91,8 @@ export function corosErrorMessage(err: CorosError, source: "direct" | "connector
 
 /* ---------------------------------------------------------------- direct sign-in (OAuth + PKCE) */
 const DISCOVERY = "https://mcp.coros.com/.well-known/oauth-protected-resource/mcp";
-const CD_KEY = "nsm-coros-direct";
-const CD_PENDING = "nsm-coros-pending";
+const CD_KEY = "htb-coros-direct";
+const CD_PENDING = "htb-coros-pending";
 const SCOPE = "openid mcp.tools offline_access";
 const MCP_VERSION = "2025-06-18";
 
@@ -162,7 +162,7 @@ export async function corosConnect(): Promise<void> {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          client_name: "Norwegian Singles Planner", redirect_uris: [redirectUri()],
+          client_name: "Haji Training Block", redirect_uris: [redirectUri()],
           grant_types: ["authorization_code", "refresh_token"], response_types: ["code"],
           token_endpoint_auth_method: "none", scope: SCOPE,
         }),

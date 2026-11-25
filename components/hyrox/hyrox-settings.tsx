@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useApp } from "@/components/app-provider";
 import { DIVISIONS, type Division, type HyroxSettings } from "@/lib/hyrox";
 
-const OPEN_KEY = "nsm-hx-settings-collapsed";
+const OPEN_KEY = "htb-hx-settings-collapsed";
 
 function Field({ id, label, hint, children }: { id: string; label: string; hint?: string; children: React.ReactNode }) {
   return (

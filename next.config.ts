@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
-// Static export for GitHub Pages. The site lives under /NSM there;
+// Static export for GitHub Pages. The site lives under /haji-training-block there;
 // set NEXT_PUBLIC_BASE_PATH="" for local previews at the root.
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "/NSM";
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "/haji-training-block";
 
 const nextConfig: NextConfig = {
   output: "export",

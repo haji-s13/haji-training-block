@@ -12,7 +12,7 @@ import { addDays, BLOCK_WEEKS, MAX_WEEKS, newId, type Race, type Vacation } from
 import { fmtShortDate, isoDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const OPEN_KEY = "nsm-season-collapsed";
+const OPEN_KEY = "htb-season-collapsed";
 
 /** The season both plans share: build dates, races (each gets a taper) and time off. */
 export function SeasonCard() {

@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 const VIEWS = [1, 3, 7] as const;
 type View = (typeof VIEWS)[number];
-const VIEW_KEY = "nsm-dash-view";
+const VIEW_KEY = "htb-dash-view";
 
 const RUN_DOT: Record<string, string> = {
   easy: "bg-session-easy-ink", longrun: "bg-session-long-ink", race: "bg-session-race-ink",

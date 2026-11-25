@@ -43,8 +43,8 @@ If you created the table before the `grant` line was added to this guide, run ju
 
 Open **Authentication → URL Configuration**:
 
-- **Site URL**: `https://haji-s13.github.io/NSM/`
-- **Redirect URLs**: add `https://haji-s13.github.io/NSM/**`
+- **Site URL**: `https://haji-s13.github.io/haji-training-block/`
+- **Redirect URLs**: add `https://haji-s13.github.io/haji-training-block/**`
   (the `**` also covers `?reset=1`, which password-reset links use)
 
 This is where the "confirm your email" and "reset password" links send people.

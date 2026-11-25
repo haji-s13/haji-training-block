@@ -4,18 +4,18 @@ import { LogOut, UserRound } from "lucide-react";
 import { useApp } from "@/components/app-provider";
 import { authEnabled } from "@/lib/supabase";
 
-/** Two-line wordmark: HYROX + Norwegian Singles, with "Method" underneath. */
+/** Two-line wordmark: Haji Training Block, with the method underneath. */
 export function Wordmark() {
   return (
     <span className="flex min-w-0 items-center gap-2">
       <span className="flex h-9 w-10 shrink-0 items-center justify-center rounded-md bg-signal font-display text-[0.9375rem] leading-none tracking-tight font-black text-signal-foreground" aria-hidden>
-        H<span className="font-extralight">/</span>N
+        H<span className="font-extralight">/</span>T
       </span>
       <span className="flex min-w-0 flex-col">
         <span className="truncate font-display text-[0.9375rem] leading-6 font-black tracking-tight sm:text-[1.125rem] md:text-[1.25rem]">
-          HYROX <span className="font-extralight text-signal">+</span> Norwegian Singles
+          Haji <span className="font-extralight text-signal">·</span> Training Block
         </span>
-        <span className="text-meta uppercase text-hero-muted">Method · Training planner</span>
+        <span className="text-meta uppercase text-hero-muted">HYROX + Norwegian Singles</span>
       </span>
     </span>
   );
@@ -28,7 +28,7 @@ export function SiteHeader({ showAccount = true }: { showAccount?: boolean }) {
   return (
     <header className="bg-hero text-hero-foreground no-print pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-[max(16px,env(safe-area-inset-left))] md:px-8">
-        <a href="#paces" className="min-w-0" aria-label="HYROX + Norwegian Singles Method">
+        <a href="#paces" className="min-w-0" aria-label="Haji Training Block">
           <Wordmark />
         </a>
         {showAccount && entry && (

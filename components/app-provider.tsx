@@ -66,7 +66,7 @@ export const useApp = () => {
   return v;
 };
 
-const ENTRY_KEY = "nsm-entry";
+const ENTRY_KEY = "htb-entry";
 const readEntry = (): Entry => { try { return (localStorage.getItem(ENTRY_KEY) as Entry) || null; } catch { return null; } };
 const writeEntry = (v: Entry) => { try { if (v) localStorage.setItem(ENTRY_KEY, v); else localStorage.removeItem(ENTRY_KEY); } catch { /* ignore */ } };
 

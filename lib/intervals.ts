@@ -3,7 +3,7 @@ import { dayDate, type Session, type Week } from "./plan";
 import type { Paces } from "./vdot";
 
 const ICU_BASE = "https://intervals.icu/api/v1/athlete/";
-const KEY_STORE = "nsm-icu-key";
+const KEY_STORE = "htb-icu-key";
 let keyMemory = "";
 
 export function icuKey(): string {
@@ -57,7 +57,7 @@ export function icuEvent(wk: Week, i: number, u: Units, p: Paces): IcuEvent {
   const main = d.pm ? { ...d, pm: undefined, title: "AM threshold" } : d;
   return {
     category: "WORKOUT", type: "Run", start_date_local: `${day}T${d.pm ? "07" : "00"}:00:00`, name: main.title,
-    description: icuDescription(wk, main, u, p), external_id: `nsm-${day}`, moving_time: Math.round(main.sec),
+    description: icuDescription(wk, main, u, p), external_id: `htb-${day}`, moving_time: Math.round(main.sec),
   };
 }
 
@@ -68,7 +68,7 @@ export function icuEvents(wk: Week, i: number, u: Units, p: Paces): IcuEvent[] {
   if (d.pm) {
     const day = isoDate(dayDate(wk, i));
     out.push({ category: "WORKOUT", type: "Run", start_date_local: `${day}T17:00:00`, name: d.pm.title,
-      description: icuDescription(wk, d.pm, u, p), external_id: `nsm-${day}-pm`, moving_time: Math.round(d.pm.sec) });
+      description: icuDescription(wk, d.pm, u, p), external_id: `htb-${day}-pm`, moving_time: Math.round(d.pm.sec) });
   }
   return out;
 }

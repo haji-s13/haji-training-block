@@ -16,7 +16,7 @@ export function HomeScreen() {
       <section className="bg-hero text-hero-foreground">
         <div className="mx-auto grid max-w-6xl gap-8 px-[max(16px,env(safe-area-inset-left))] pt-8 pb-12 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-16 md:px-8 md:pt-16 md:pb-24">
           <div className="flex min-w-0 flex-col gap-6">
-            <p className="text-meta uppercase text-signal">HYROX + Norwegian Singles Method</p>
+            <p className="text-meta uppercase text-signal">Haji Training Block</p>
             <h1 className="font-display text-[2.5rem] leading-[48px] font-black tracking-tight md:text-[4rem] md:leading-[72px]">
               Run At Threshold.<br />
               <span className="font-extralight">Race The Stations.</span>
