@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, TriangleAlert, UserRound } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Trash2, TriangleAlert, UserRound } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -134,7 +138,7 @@ export function FuelScreen() {
           <DayTargets day={day} kg={kg} isToday={isToday} log={food.logs[day.iso]} />
 
           <LogCard key={day.iso} day={day} label={shortName(day.date)} log={food.logs[day.iso]} saving={food.saving}
-            signedIn={food.signedIn} onSave={food.save} />
+            signedIn={food.signedIn} onSave={food.save} onDelete={food.remove} />
 
           <WeekList days={days} kg={kg} logs={food.logs} />
         </>
@@ -229,9 +233,11 @@ function DayTargets({ day, kg, isToday, log }: { day: FuelDay; kg: number; isTod
 const MAX_G = { carbs: 4999, protein: 1999, fat: 1999 } as const;
 const parseG = (v: string, max: number) => { const x = Number(v); return Number.isFinite(x) && x >= 0 && x <= max ? Math.round(x) : null; };
 
-function LogCard({ day, label, log, saving, signedIn, onSave }: {
-  day: FuelDay; label: string; log?: FoodLog; saving: boolean; signedIn: boolean; onSave: (l: FoodLog) => Promise<boolean>;
+function LogCard({ day, label, log, saving, signedIn, onSave, onDelete }: {
+  day: FuelDay; label: string; log?: FoodLog; saving: boolean; signedIn: boolean;
+  onSave: (l: FoodLog) => Promise<boolean>; onDelete: (date: string) => Promise<boolean>;
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [vals, setVals] = useState({ carbs: "", protein: "", fat: "" });
   const touched = useRef(false);
   // Fill in the saved log when it arrives (or changes after a save), unless the user is already typing.
@@ -245,6 +251,7 @@ function LogCard({ day, label, log, saving, signedIn, onSave }: {
   const kcal = valid ? kcalOf(g.carbs!, g.protein!, g.fat!) : null;
   const unchanged = !!log && valid && log.carbs === g.carbs && log.protein === g.protein && log.fat === g.fat;
   const fields = [["carbs", "Carbs"], ["protein", "Protein"], ["fat", "Fat"]] as const;
+  const del = async () => { touched.current = false; await onDelete(day.iso); };
 
   return (
     <Card className="gap-4 py-6">
@@ -271,6 +278,25 @@ function LogCard({ day, label, log, saving, signedIn, onSave }: {
           onClick={() => valid && onSave({ date: day.iso, carbs: g.carbs!, protein: g.protein!, fat: g.fat! })}>
           {saving ? "Saving…" : "Save day"}
         </Button>
+        {log && (
+          <Button variant="outline" className="w-full" disabled={saving} onClick={() => setConfirmDelete(true)}>
+            <Trash2 aria-hidden />Delete this day
+          </Button>
+        )}
+        <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {label}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This removes what you logged for this day{signedIn ? " from your account" : ""}. Your targets stay the same. You can log the day again afterwards.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={del}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         {!signedIn && (
           <p className="font-extralight text-muted-foreground">Guest logs aren&apos;t saved: they&apos;re gone when you reload. Sign in to keep them.</p>
         )}
