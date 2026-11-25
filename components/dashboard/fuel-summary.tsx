@@ -8,7 +8,7 @@ import { useFoodLogs } from "@/components/nutrition/use-food-logs";
 import { openFuelOn } from "@/components/nutrition/fuel-screen";
 import { isoDate } from "@/lib/format";
 import { fuelDay } from "@/lib/fuel-day";
-import { GEARS, kcalOf } from "@/lib/nutrition";
+import { dailyFromMeals, GEARS, kcalOf } from "@/lib/nutrition";
 
 const MACROS = [
   { k: "carbs", label: "Carbs", color: "var(--phase-trial)" },
@@ -20,11 +20,12 @@ const n = (x: number) => Math.round(x).toLocaleString("en-US");
 /** Compact Fuel summary for one day: calories and macros needed against what was eaten. Opens the Fuel tab. */
 export function FuelSummary({ date }: { date: Date }) {
   const { plan, hyrox, calendar, settings, setScreen } = useApp();
-  const { kg } = useBodyWeight();
+  const { kg, meals } = useBodyWeight();
   const iso = isoDate(date);
   const food = useFoodLogs(iso, iso);
   const day = useMemo(() => fuelDay(date, calendar, plan, hyrox, kg, settings.nutrition), [date, calendar, plan, hyrox, kg, settings.nutrition]);
-  const log = food.logs[iso];
+  const syncedDays = useMemo(() => dailyFromMeals(meals), [meals]);
+  const log = food.logs[iso] ?? syncedDays[iso];
   const t = day.targets;
   const eaten = log ? kcalOf(log.carbs, log.protein, log.fat) : null;
 

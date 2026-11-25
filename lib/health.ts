@@ -2,7 +2,9 @@ import { supabaseUrl } from "./supabase";
 
 /** One night from Health Connect: wake-up time, session start, seconds asleep and stages. */
 export interface SleepNight { end: string; start: string | null; sec: number; stages: { stage: string; start: string; end: string; sec: number }[] }
-export interface HealthData { weight: { ts: number; kg: number }[]; sleep: SleepNight[]; lastSync: string | null }
+/** One meal (Health Connect nutrition record, e.g. a MyFitnessPal meal summary): start time, kcal and grams. */
+export interface MealRecord { at: string; kcal: number; carbs: number; protein: number; fat: number; meal?: string | null; source?: string | null }
+export interface HealthData { weight: { ts: number; kg: number }[]; sleep: SleepNight[]; nutrition: MealRecord[]; lastSync: string | null }
 
 /** The `health` Edge Function: the phone (HC Webhook app) posts here, the Dashboard reads from here. */
 export const healthUrl = () => `${supabaseUrl()}/functions/v1/health`;
@@ -23,7 +25,12 @@ export async function healthRead(key: string): Promise<HealthData> {
   if (res.status === 404) throw new Error("The health data connection isn't deployed yet.");
   const d = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(d.error || `Health data error (${res.status}).`);
-  return { weight: Array.isArray(d.weight) ? d.weight : [], sleep: Array.isArray(d.sleep) ? d.sleep : [], lastSync: d.lastSync ?? null };
+  return {
+    weight: Array.isArray(d.weight) ? d.weight : [],
+    sleep: Array.isArray(d.sleep) ? d.sleep : [],
+    nutrition: Array.isArray(d.nutrition) ? d.nutrition : [],
+    lastSync: d.lastSync ?? null,
+  };
 }
 
 /** The sync key is also kept on this device, so guests keep it across reloads. */

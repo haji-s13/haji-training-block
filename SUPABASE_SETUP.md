@@ -99,12 +99,12 @@ The first time someone signs in after this, their newest plan from the old "My p
 copied into their account settings. The old `plans` table is no longer used by the app and can
 be kept or dropped.
 
-## Weight and sleep from Health Connect (Edge Function)
+## Weight, sleep and nutrition from Health Connect (Edge Function)
 
 The Dashboard's Weight and Sleep cards read from the `health` Edge Function
 (`supabase/functions/health`). The phone's HC Webhook app posts Health Connect data to it with a
 private key (header `X-Health-Key`); only a SHA-256 hash of the key is stored, in the
-`health_records` table (`supabase/health_records.sql`), which browsers can't read directly.
+`health_records` table, and meals (Health Connect nutrition, e.g. from MyFitnessPal) in `health_nutrition`, keyed by record id so edits and deletions carry over (`supabase/health_records.sql`). Browsers can't read either table directly. In HC Webhook, tick Nutrition under Grant Permissions.
 
 The **Supabase functions** GitHub workflow creates the table and deploys the function on every push to
 `main` that touches them (repo secret `SUPABASE_ACCESS_TOKEN` from supabase.com → Account → Access
