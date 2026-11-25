@@ -2,7 +2,6 @@
 
 import { Moon, RefreshCw, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useApp } from "@/components/app-provider";
 import { isoDate, parseDate } from "@/lib/format";
 import { avgAsleep, fmtSleep, nights, STAGE_LABEL, type StageKind } from "@/lib/sleep";
 import { dailyWeighIns, fmtWeight, fmtWeightChange, summarize } from "@/lib/weight";
@@ -48,14 +47,13 @@ const STAGE_BAR: Record<StageKind, string> = {
 
 /** Weight (from Renpho via Health Connect) and Sleep, each in its own card. */
 export function HealthCards() {
-  const { settings } = useApp();
   const { key } = useHealthKey();
   const { data, error, busy, reload } = useHealth(key || undefined);
   const setup = <Note>Connect Google Health Connect under Connections on Profile to see this here.</Note>;
   const synced = data?.lastSync ? <p className="px-1 text-meta text-muted-foreground">Last sent from your phone <span className="num">{dayLabel(new Date(data.lastSync), true)}</span> · checks every 5 min</p> : null;
 
   // Weight
-  const u = settings.weightUnit || "lb";
+  const u = "lb" as const;
   const w = data && summarize(dailyWeighIns(data.weight));
   // Sleep
   const ns = data ? nights(data.sleep) : [];
