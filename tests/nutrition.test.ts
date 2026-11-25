@@ -39,11 +39,11 @@ test("a higher protein setting wins over the gear minimum", () => {
   assert.equal(dayTargets("double", 80, { ...n, proteinPerKg: 2.2 }).protein, 176);
 });
 
-test("lose takes 300 kcal off rest and easy days only, keeping fat at 20% or more", () => {
+test("lose takes the deficit (default 500) off rest and easy days only, keeping fat at 20% or more", () => {
   const lose = { ...n, goal: "lose" as const };
   for (const g of ["rest", "easy"] as const) {
     const a = dayTargets(g, 80, n), b = dayTargets(g, 80, lose);
-    assert.ok(Math.abs(a.kcal - b.kcal - 300) <= 10);
+    assert.ok(Math.abs(a.kcal - b.kcal - 500) <= 10);
     assert.ok((b.fat * 9) / kcalOf(b.carbs, b.protein, b.fat) >= 0.195);
     assert.equal(b.protein, a.protein);
   }
@@ -86,7 +86,7 @@ test("underFuelled needs the last 3 logged days all under 90%", () => {
 
 test("normalizeNutrition drops bad values and fills defaults; settings carry it", () => {
   const r = normalizeNutrition({ sex: "x", birthYear: "1990", heightIn: 70, bodyFat: 99, proteinPerKg: 0, goal: "lose" });
-  assert.deepEqual(r, { sex: undefined, birthYear: undefined, heightIn: 70, weightLb: undefined, bodyFat: undefined, proteinPerKg: DEFAULT_PROTEIN_PER_KG, activity: "moderate", goal: "lose" });
+  assert.deepEqual(r, { sex: undefined, birthYear: undefined, heightIn: 70, weightLb: undefined, bodyFat: undefined, proteinPerKg: DEFAULT_PROTEIN_PER_KG, activity: "moderate", goal: "lose", deficit: undefined });
   assert.deepEqual(normalizeSettings({}).nutrition, normalizeNutrition(undefined));
 });
 
@@ -109,4 +109,36 @@ test("default protein is 1 g per lb on every day, and the old 1.6 g/kg default m
   for (const g of ["rest", "easy", "hard", "double"] as const) assert.equal(dayTargets(g, kg, n).protein, Math.round(lb));
   assert.equal(normalizeNutrition({ proteinPerKg: 1.6 }).proteinPerKg, DEFAULT_PROTEIN_PER_KG);
   assert.equal(normalizeNutrition({ proteinPerKg: 1.61 }).proteinPerKg, 1.61); // a typed 0.73 g/lb stays
+});
+
+test("dailyFromMeals sums synced meals by local day and names the app", async () => {
+  const { dailyFromMeals } = await import("../lib/nutrition");
+  const at = (d: string, h: number) => new Date(`${d}T${String(h).padStart(2, "0")}:30:00`).toISOString();
+  const days = dailyFromMeals([
+    { at: at("2026-11-24", 8), carbs: 80.4, protein: 30.2, fat: 10, source: "com.myfitnesspal.android" },
+    { at: at("2026-11-24", 19), carbs: 120, protein: 50, fat: 25.6, source: "com.myfitnesspal.android" },
+    { at: at("2026-11-25", 7), carbs: 60, protein: 20, fat: 5 },
+    { at: "not a date", carbs: 999, protein: 999, fat: 999 },
+  ]);
+  assert.deepEqual(days["2026-11-24"], { date: "2026-11-24", carbs: 200, protein: 80, fat: 36, apps: ["MyFitnessPal"] });
+  assert.deepEqual(days["2026-11-25"], { date: "2026-11-25", carbs: 60, protein: 20, fat: 5, apps: [] });
+  assert.equal(Object.keys(days).length, 2);
+});
+
+test("mergeEaten: a day typed by hand wins over the synced total", async () => {
+  const { mergeEaten } = await import("../lib/nutrition");
+  const synced = { "2026-11-24": { date: "2026-11-24", carbs: 200, protein: 80, fat: 36 }, "2026-11-25": { date: "2026-11-25", carbs: 60, protein: 20, fat: 5 } };
+  const manual = { "2026-11-24": { date: "2026-11-24", carbs: 300, protein: 150, fat: 70 } };
+  const out = mergeEaten(manual, synced);
+  assert.equal(out["2026-11-24"].carbs, 300);
+  assert.equal(out["2026-11-24"].source, "manual");
+  assert.equal(out["2026-11-25"].source, "synced");
+});
+
+test("a custom deficit is used and kept in range", () => {
+  const a = dayTargets("easy", 80, n), b = dayTargets("easy", 80, { ...n, goal: "lose", deficit: 750 });
+  assert.ok(Math.abs(a.kcal - b.kcal - 750) <= 10);
+  assert.equal(normalizeNutrition({ deficit: 50 }).deficit, undefined);
+  assert.equal(normalizeNutrition({ deficit: 600 }).deficit, 600);
+  assert.equal(normalizeNutrition({ deficit: 5000 }).deficit, undefined);
 });

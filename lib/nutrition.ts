@@ -5,6 +5,7 @@
  * protein is steady per kg, fat is a quarter of energy, and calories come from the three. */
 
 import { KG_PER_LB } from "./weight";
+import { isoDate } from "./format";
 
 export type Sex = "male" | "female";
 export type Activity = "low" | "moderate" | "high";
@@ -25,6 +26,8 @@ export interface NutritionSettings {
   /** Day-to-day activity outside training. */
   activity: Activity;
   goal: Goal;
+  /** Lose: kcal taken off rest and easy days. Default 500. */
+  deficit?: number;
 }
 
 /** 1 g of protein per lb of body weight, in g/kg (about 2.2). */
@@ -48,6 +51,7 @@ export function normalizeNutrition(raw: unknown): NutritionSettings {
     proteinPerKg: r.proteinPerKg === OLD_DEFAULT_PROTEIN ? d.proteinPerKg : num(r.proteinPerKg, 1, 3) ?? d.proteinPerKg,
     activity: r.activity === "low" || r.activity === "high" ? r.activity : d.activity,
     goal: r.goal === "lose" || r.goal === "gain" ? r.goal : d.goal,
+    deficit: num(r.deficit, MIN_DEFICIT, MAX_DEFICIT),
   };
 }
 
@@ -68,8 +72,13 @@ const ACTIVITY_FACTOR: Record<Activity, number> = { low: 1.3, moderate: 1.45, hi
 
 export const FAT_SHARE = 0.25;
 export const MIN_FAT_SHARE = 0.2;
-/** Calories the "lose" goal takes off rest and easy days, and "gain" adds to every day. */
+/** Calories "gain" adds to every day, as carbs. */
 export const GOAL_KCAL = 300;
+/** Default and allowed range for the "lose" deficit on rest and easy days. */
+export const DEFAULT_DEFICIT = 500;
+export const MIN_DEFICIT = 100;
+export const MAX_DEFICIT = 1000;
+export const deficitOf = (n: Pick<NutritionSettings, "deficit">) => n.deficit ?? DEFAULT_DEFICIT;
 
 /** The day's gear from the run plan's session type. Lifting doesn't change it. */
 export function gearFor(runType: string | undefined): Gear {
@@ -84,7 +93,7 @@ export interface Targets { gear: Gear; carbs: number; protein: number; fat: numb
 /** Calories in grams of carbs, protein and fat. */
 export const kcalOf = (c: number, p: number, f: number) => c * 4 + p * 4 + f * 9;
 
-export function dayTargets(gear: Gear, kg: number, n: Pick<NutritionSettings, "proteinPerKg" | "goal">): Targets {
+export function dayTargets(gear: Gear, kg: number, n: Pick<NutritionSettings, "proteinPerKg" | "goal" | "deficit">): Targets {
   const g = GEARS[gear];
   let carbs = g.carbs * kg;
   const protein = Math.max(n.proteinPerKg, g.protein) * kg;
@@ -94,11 +103,12 @@ export function dayTargets(gear: Gear, kg: number, n: Pick<NutritionSettings, "p
   const light = gear === "rest" || gear === "easy";
   if (n.goal === "lose" && light) {
     // Off fat first, down to 20% of the new total, then off carbs. Hard days stay fully fuelled.
-    const newKcal = kcal - GOAL_KCAL;
+    const cut = deficitOf(n);
+    const newKcal = kcal - cut;
     const minFat = (newKcal * MIN_FAT_SHARE) / 9;
-    const fromFat = Math.min(GOAL_KCAL / 9, Math.max(0, fat - minFat));
+    const fromFat = Math.min(cut / 9, Math.max(0, fat - minFat));
     fat -= fromFat;
-    carbs -= (GOAL_KCAL - fromFat * 9) / 4;
+    carbs = Math.max(0, carbs - (cut - fromFat * 9) / 4);
     kcal = newKcal;
   } else if (n.goal === "gain") {
     carbs += GOAL_KCAL / 4;
@@ -150,4 +160,34 @@ export interface FoodLog { date: string; carbs: number; protein: number; fat: nu
 export function underFuelled(logs: { eaten: number; target: number }[], days = 3, share = 0.9): boolean {
   if (logs.length < days) return false;
   return logs.slice(-days).every((d) => d.target > 0 && d.eaten < d.target * share);
+}
+
+/** A day's synced totals, with the apps that wrote its meals. */
+export type SyncedDay = FoodLog & { apps: string[] };
+
+/** Health Connect app ids people will recognise. */
+const APP_NAMES: Record<string, string> = { "com.myfitnesspal.android": "MyFitnessPal" };
+export const appName = (id: string) => APP_NAMES[id] ?? id;
+
+/** Meals synced from Health Connect → daily totals by local date (grams rounded). Days with nothing eaten are left out. */
+export function dailyFromMeals(meals: { at: string; carbs: number; protein: number; fat: number; source?: string | null }[]): Record<string, SyncedDay> {
+  const out: Record<string, SyncedDay> = {};
+  for (const m of meals) {
+    const t = Date.parse(m.at);
+    if (!Number.isFinite(t)) continue;
+    const date = isoDate(new Date(t));
+    const d = (out[date] ??= { date, carbs: 0, protein: 0, fat: 0, apps: [] });
+    if (m.source && !d.apps.includes(appName(m.source))) d.apps.push(appName(m.source));
+    d.carbs += Number(m.carbs) || 0; d.protein += Number(m.protein) || 0; d.fat += Number(m.fat) || 0;
+  }
+  for (const d of Object.values(out)) { d.carbs = Math.round(d.carbs); d.protein = Math.round(d.protein); d.fat = Math.round(d.fat); }
+  return out;
+}
+
+/** What was eaten each day: a day typed by hand wins over the synced total for that day. */
+export function mergeEaten(manual: Record<string, FoodLog>, synced: Record<string, FoodLog>): Record<string, FoodLog & { source: "manual" | "synced" }> {
+  const out: Record<string, FoodLog & { source: "manual" | "synced" }> = {};
+  for (const [k, v] of Object.entries(synced)) out[k] = { ...v, source: "synced" };
+  for (const [k, v] of Object.entries(manual)) out[k] = { ...v, source: "manual" };
+  return out;
 }

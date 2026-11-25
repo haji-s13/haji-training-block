@@ -1,9 +1,9 @@
-// Supabase Edge Function: receives weight and sleep from the phone and serves them to the Dashboard.
+// Supabase Edge Function: receives weight, sleep and nutrition from the phone and serves them to the app.
 //
 // Phone side: the HC Webhook Android app reads Health Connect (where Renpho writes weight and your
-// watch or phone writes sleep) and POSTs JSON here, with the person's private sync key in the
+// watch or phone writes sleep, MyFitnessPal writes meals) and POSTs JSON here, with the person's private sync key in the
 // X-Health-Key header (header only, so it stays out of URLs and logs). The Dashboard reads it back with {"action":"read","key":...}.
-// Only a SHA-256 hash of the key is stored. Table: supabase/health_records.sql.
+// Only a SHA-256 hash of the key is stored. Tables: supabase/health_records.sql (health_records, health_nutrition).
 //
 // Deploy: npx supabase functions deploy health --no-verify-jwt (or the "Supabase functions" workflow).
 
@@ -66,19 +66,62 @@ function rowsFrom(body: Record<string, unknown>, keyHash: string): Row[] {
   return [...unique.values()].slice(0, MAX_ROWS);
 }
 
+type NutritionRow = { key_hash: string; record_id: string; at: string; data: Record<string, unknown>; received_at: string };
+const grams = (v: unknown) => { const x = Number(v); return Number.isFinite(x) && x >= 0 && x < 5000 ? Math.round(x * 10) / 10 : 0; };
+
+/** nutrition: [{start_time, end_time, calories, protein_grams, carbs_grams, fat_grams, meal_type?, name?, metadata: {id, data_origin}}]. */
+function nutritionFrom(body: Record<string, unknown>, keyHash: string): NutritionRow[] {
+  const now = new Date().toISOString();
+  const rows: NutritionRow[] = [];
+  for (const r of Array.isArray(body.nutrition) ? body.nutrition : []) {
+    const at = iso(r?.start_time ?? r?.time);
+    if (!at) continue;
+    const meta = (r?.metadata ?? {}) as Record<string, unknown>;
+    const data = {
+      kcal: grams(r?.calories ?? r?.energy_kcal), carbs: grams(r?.carbs_grams), protein: grams(r?.protein_grams), fat: grams(r?.fat_grams),
+      meal: typeof r?.meal_type === "string" ? r.meal_type.slice(0, 20) : null,
+      source: typeof meta.data_origin === "string" ? meta.data_origin.slice(0, 100) : null,
+    };
+    if (!data.kcal && !data.carbs && !data.protein && !data.fat) continue;
+    // Records without an id (shouldn't happen) get one from their time and meal.
+    const id = typeof meta.id === "string" && meta.id ? meta.id.slice(0, 200) : `${at}|${data.meal ?? ""}|${String(r?.name ?? "").slice(0, 50)}`;
+    rows.push({ key_hash: keyHash, record_id: id, at, data, received_at: now });
+  }
+  return [...new Map(rows.map((r) => [r.record_id, r])).values()].slice(0, MAX_ROWS);
+}
+
+/** Record ids HC Webhook says were deleted in Health Connect (deleted: [{type, id}]). */
+function deletedNutrition(body: Record<string, unknown>): string[] {
+  return (Array.isArray(body.deleted) ? body.deleted : [])
+    .filter((d: Record<string, unknown>) => /nutrition/i.test(String(d?.type ?? "")) && typeof d?.id === "string" && d.id)
+    .map((d: Record<string, unknown>) => String(d.id).slice(0, 200))
+    .slice(0, MAX_ROWS);
+}
+
+const inList = (ids: string[]) => `(${ids.map((id) => `"${id.replace(/["\\]/g, "")}"`).join(",")})`;
+
 async function ingest(body: Record<string, unknown>, keyHash: string) {
+  const food = nutritionFrom(body, keyHash);
+  const gone = deletedNutrition(body);
+  if (food.length) {
+    await rest("health_nutrition?on_conflict=key_hash,record_id", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(food) });
+    await rest(`health_nutrition?key_hash=eq.${keyHash}&at=lt.${encodeURIComponent(new Date(Date.now() - 400 * 86400000).toISOString())}`, { method: "DELETE" });
+  }
+  for (let i = 0; i < gone.length; i += 100) {
+    await rest(`health_nutrition?key_hash=eq.${keyHash}&record_id=in.${encodeURIComponent(inList(gone.slice(i, i + 100)))}`, { method: "DELETE" });
+  }
   const rows = rowsFrom(body, keyHash);
   if (rows.length) {
     await rest("health_records?on_conflict=key_hash,kind,at", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(rows) });
     // Keep about a year per key so the table can't grow without end.
     await rest(`health_records?key_hash=eq.${keyHash}&at=lt.${encodeURIComponent(new Date(Date.now() - 400 * 86400000).toISOString())}`, { method: "DELETE" });
   } else {
-    // Nothing new: still record that the phone checked in.
+    // Nothing new for weight or sleep: still record that the phone checked in.
     await rest(`health_records?key_hash=eq.${keyHash}&at=gte.${encodeURIComponent(new Date(Date.now() - 2 * 86400000).toISOString())}`, {
       method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ received_at: new Date().toISOString() }),
     });
   }
-  return { stored: rows.length };
+  return { stored: rows.length, nutrition: food.length, deleted: gone.length };
 }
 
 async function read(keyHash: string) {
@@ -86,11 +129,14 @@ async function read(keyHash: string) {
   type Stored = { at: string; data: Record<string, unknown>; received_at: string };
   const q = (kind: string, days: number): Promise<Stored[]> =>
     rest(`health_records?select=at,data,received_at&key_hash=eq.${keyHash}&kind=eq.${kind}&at=gte.${encodeURIComponent(since(days))}&order=at.desc&limit=1000`).then((r) => r.json()).then((rows: Stored[]) => rows.reverse());
-  const [weight, sleep] = await Promise.all([q("weight", 60), q("sleep", 30)]);
+  const meals = rest(`health_nutrition?select=at,data,received_at&key_hash=eq.${keyHash}&at=gte.${encodeURIComponent(since(60))}&order=at.asc&limit=2000`)
+    .then((r) => r.json()) as Promise<Stored[]>;
+  const [weight, sleep, nutrition] = await Promise.all([q("weight", 60), q("sleep", 30), meals]);
   return {
     weight: weight.map((r) => ({ ts: Date.parse(r.at), kg: Number(r.data.kg) })),
     sleep: sleep.map((r) => ({ end: r.at, ...r.data })),
-    lastSync: [...weight, ...sleep].reduce<string | null>((m, r) => (!m || r.received_at > m ? r.received_at : m), null),
+    nutrition: nutrition.map((r) => ({ at: r.at, ...r.data })),
+    lastSync: [...weight, ...sleep, ...nutrition].reduce<string | null>((m, r) => (!m || r.received_at > m ? r.received_at : m), null),
   };
 }
 

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApp } from "@/components/app-provider";
 import { useBodyWeight } from "@/components/nutrition/use-body-weight";
-import { ACTIVITY_LABELS, GEARS, GOAL_KCAL, fromInches, toInches, type Activity, type Goal, type NutritionSettings, type Sex, fmtPerLb } from "@/lib/nutrition";
+import { ACTIVITY_LABELS, deficitOf, GEARS, GOAL_KCAL, MAX_DEFICIT, MIN_DEFICIT, fromInches, toInches, type Activity, type Goal, type NutritionSettings, type Sex, fmtPerLb } from "@/lib/nutrition";
 import { fmtWeight, KG_PER_LB } from "@/lib/weight";
 
 const GOALS: { value: Goal; label: string }[] = [
@@ -85,7 +85,7 @@ export function BodyCard() {
 
   return (
     <CollapsibleCard storageKey="body" title="Body & Nutrition"
-      summary={[lb ? `${lb} lb` : null, n.bodyFat ? `${n.bodyFat}% body fat` : null, `${n.goal[0].toUpperCase()}${n.goal.slice(1)}`].filter(Boolean).join(" · ")}>
+      summary={[lb ? `${lb} lb` : null, n.bodyFat ? `${n.bodyFat}% body fat` : null, n.goal === "lose" ? `Lose · −${deficitOf(n)} kcal on easy days` : `${n.goal[0].toUpperCase()}${n.goal.slice(1)}`].filter(Boolean).join(" · ")}>
         <p className="max-w-[65ch] font-extralight text-muted-foreground">
           Fuel targets come from your weight and the day&apos;s training. Body fat, height, age and sex only feed the estimated daily burn shown on Fuel.
         </p>
@@ -165,8 +165,19 @@ export function BodyCard() {
                   onClick={() => set({ goal: g.value })}>{g.label}</Button>
               ))}
             </div>
-            <p className="max-w-[65ch] font-extralight text-muted-foreground">
-              Lose takes <span className="num">{GOAL_KCAL}</span> kcal off rest and easy days only; hard and double threshold days stay fully fuelled. Gain adds <span className="num">{GOAL_KCAL}</span> kcal of carbs every day.
+            {n.goal === "lose" && (
+              <div className="flex flex-col gap-2 pt-2">
+                <Label htmlFor="body-deficit">Daily deficit (kcal)</Label>
+                <NumField id="body-deficit" value={deficitOf(n)} min={MIN_DEFICIT} max={MAX_DEFICIT} required aria-describedby="body-goal-note"
+                  onSave={(v) => { if (v !== undefined) set({ deficit: Math.round(v) }); }} />
+              </div>
+            )}
+            <p id="body-goal-note" className="max-w-[65ch] font-extralight text-muted-foreground">
+              {n.goal === "lose"
+                ? <>Takes <span className="num">{deficitOf(n)}</span> kcal off rest and easy days only (<span className="num">{MIN_DEFICIT}</span>–<span className="num">{MAX_DEFICIT}</span>). Hard and double threshold days stay fully fuelled.</>
+                : n.goal === "gain"
+                  ? <>Adds <span className="num">{GOAL_KCAL}</span> kcal of carbs every day.</>
+                  : <>Lose takes a deficit you set off rest and easy days; Gain adds <span className="num">{GOAL_KCAL}</span> kcal of carbs every day.</>}
             </p>
           </div>
         </div>

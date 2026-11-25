@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Trash2, TriangleAlert, UserRound } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, RefreshCw, Trash2, TriangleAlert, UserRound } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
@@ -18,7 +18,7 @@ import { useFoodLogs } from "@/components/nutrition/use-food-logs";
 import { addDays, mondayOf } from "@/lib/calendar";
 import { dist, isoDate, parseDate } from "@/lib/format";
 import { fuelDay, type FuelDay } from "@/lib/fuel-day";
-import { burnKcal, GEARS, kcalOf, refuel, underFuelled, type FoodLog, type Gear, fmtPerLb } from "@/lib/nutrition";
+import { burnKcal, dailyFromMeals, GEARS, kcalOf, mergeEaten, type SyncedDay, refuel, underFuelled, type FoodLog, type Gear, fmtPerLb } from "@/lib/nutrition";
 import { fmtWeight } from "@/lib/weight";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +45,7 @@ export function openFuelOn(iso: string) { pendingDay = iso; }
 /** Daily fuel targets that follow the run and lifting plans, and a log of what was eaten. */
 export function FuelScreen() {
   const { plan, hyrox, calendar, settings, setScreen } = useApp();
-  const { kg } = useBodyWeight();
+  const { kg, meals } = useBodyWeight();
   const [sel, setSel] = useState(() => pendingDay ?? isoDate(today()));
   useEffect(() => { pendingDay = null; }, []);
   const selDate = parseDate(sel) || today();
@@ -53,6 +53,8 @@ export function FuelScreen() {
   const from = isoDate(weekStart);
   const to = isoDate(addDays(weekStart, 6));
   const food = useFoodLogs(from, to);
+  const synced = useMemo(() => dailyFromMeals(meals), [meals]);
+  const eaten = useMemo(() => mergeEaten(food.logs, synced), [food.logs, synced]);
 
   const days = useMemo<FuelDay[]>(() => Array.from({ length: 7 }, (_, k) =>
     fuelDay(addDays(parseDate(from) || today(), k), calendar, plan, hyrox, kg, settings.nutrition)),
@@ -135,12 +137,12 @@ export function FuelScreen() {
             </div>
           </section>
 
-          <DayTargets day={day} kg={kg} isToday={isToday} log={food.logs[day.iso]} />
+          <DayTargets day={day} kg={kg} isToday={isToday} log={eaten[day.iso]} />
 
-          <LogCard key={day.iso} day={day} label={shortName(day.date)} log={food.logs[day.iso]} saving={food.saving}
+          <LogCard key={day.iso} day={day} label={shortName(day.date)} log={food.logs[day.iso]} synced={synced[day.iso]} saving={food.saving}
             signedIn={food.signedIn} onSave={food.save} onDelete={food.remove} />
 
-          <WeekList days={days} kg={kg} logs={food.logs} />
+          <WeekList days={days} kg={kg} logs={eaten} />
         </>
       )}
     </div>
@@ -233,8 +235,8 @@ function DayTargets({ day, kg, isToday, log }: { day: FuelDay; kg: number; isTod
 const MAX_G = { carbs: 4999, protein: 1999, fat: 1999 } as const;
 const parseG = (v: string, max: number) => { const x = Number(v); return Number.isFinite(x) && x >= 0 && x <= max ? Math.round(x) : null; };
 
-function LogCard({ day, label, log, saving, signedIn, onSave, onDelete }: {
-  day: FuelDay; label: string; log?: FoodLog; saving: boolean; signedIn: boolean;
+function LogCard({ day, label, log, synced, saving, signedIn, onSave, onDelete }: {
+  day: FuelDay; label: string; log?: FoodLog; synced?: SyncedDay; saving: boolean; signedIn: boolean;
   onSave: (l: FoodLog) => Promise<boolean>; onDelete: (date: string) => Promise<boolean>;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -243,13 +245,16 @@ function LogCard({ day, label, log, saving, signedIn, onSave, onDelete }: {
   // Fill in the saved log when it arrives (or changes after a save), unless the user is already typing.
   useEffect(() => {
     if (touched.current) return;
-    setVals(log ? { carbs: String(log.carbs), protein: String(log.protein), fat: String(log.fat) } : { carbs: "", protein: "", fat: "" });
-  }, [log]);
+    const v = log ?? synced;
+    setVals(v ? { carbs: String(v.carbs), protein: String(v.protein), fat: String(v.fat) } : { carbs: "", protein: "", fat: "" });
+  }, [log, synced]);
   const g = { carbs: parseG(vals.carbs || "0", MAX_G.carbs), protein: parseG(vals.protein || "0", MAX_G.protein), fat: parseG(vals.fat || "0", MAX_G.fat) };
   const valid = g.carbs !== null && g.protein !== null && g.fat !== null;
   const empty = !vals.carbs && !vals.protein && !vals.fat;
   const kcal = valid ? kcalOf(g.carbs!, g.protein!, g.fat!) : null;
-  const unchanged = !!log && valid && log.carbs === g.carbs && log.protein === g.protein && log.fat === g.fat;
+  const shown = log ?? synced;
+  const unchanged = !!shown && valid && shown.carbs === g.carbs && shown.protein === g.protein && shown.fat === g.fat;
+  const from = synced?.apps.length ? synced.apps.join(", ") : "Health Connect";
   const fields = [["carbs", "Carbs"], ["protein", "Protein"], ["fat", "Fat"]] as const;
   const del = async () => { touched.current = false; await onDelete(day.iso); };
 
@@ -257,7 +262,9 @@ function LogCard({ day, label, log, saving, signedIn, onSave, onDelete }: {
     <Card className="gap-4 py-6">
       <CardHeader className="flex flex-row items-center justify-between gap-4 px-4 md:px-6">
         <CardTitle className="text-meta uppercase">What you ate · {label}</CardTitle>
-        {unchanged && <Badge variant="outline" className="gap-1"><Check className="size-3" aria-hidden />Saved</Badge>}
+        {unchanged && (log
+          ? <Badge variant="outline" className="gap-1"><Check className="size-3" aria-hidden />Saved</Badge>
+          : <Badge variant="outline" className="gap-1"><RefreshCw className="size-3" aria-hidden />Synced</Badge>)}
       </CardHeader>
       <CardContent className="flex flex-col gap-4 px-4 md:px-6">
         <div className="grid grid-cols-3 gap-4">
@@ -297,6 +304,12 @@ function LogCard({ day, label, log, saving, signedIn, onSave, onDelete }: {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        {synced && !log && (
+          <p className="font-extralight text-muted-foreground">Synced from {from}. Change a number and save to override this day.</p>
+        )}
+        {synced && log && (
+          <p className="font-extralight text-muted-foreground">You typed this day, so it replaces the <span className="num">{n(kcalOf(synced.carbs, synced.protein, synced.fat))}</span> kcal synced from {from}. Delete it to go back to the synced totals.</p>
+        )}
         {!signedIn && (
           <p className="font-extralight text-muted-foreground">Guest logs aren&apos;t saved: they&apos;re gone when you reload. Sign in to keep them.</p>
         )}

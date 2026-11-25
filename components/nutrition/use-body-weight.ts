@@ -5,6 +5,9 @@ import { useHealthKey } from "@/components/connections/use-health-key";
 import { useHealth } from "@/components/dashboard/use-health";
 import { lbToKg } from "@/lib/nutrition";
 import { dailyWeighIns, summarize } from "@/lib/weight";
+import type { MealRecord } from "@/lib/health";
+
+const EMPTY: MealRecord[] = [];
 
 /** The weight the Fuel targets use: Health Connect's 7-day average, else the weight typed on Profile. */
 export function useBodyWeight() {
@@ -23,5 +26,7 @@ export function useBodyWeight() {
     error: health.error,
     reload: health.reload,
     lastSync: health.data?.lastSync ?? null,
+    /** Meals synced from Health Connect (e.g. MyFitnessPal). */
+    meals: health.data?.nutrition ?? EMPTY,
   };
 }
