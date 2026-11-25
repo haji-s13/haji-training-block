@@ -15,8 +15,13 @@ const MAX_ROWS = 2000;
 
 class Fail extends Error { constructor(msg: string, public status = 400) { super(msg); } }
 
-async function hashKey(key: string) {
-  if (!/^[A-Za-z0-9_-]{24,128}$/.test(key)) throw new Fail("Missing or invalid sync key.", 401);
+/** Pasted keys often pick up spaces, line breaks or quotes; drop them. */
+const cleanKey = (k: string) => k.replace(/[\s"'`]/g, "");
+
+async function hashKey(raw: string) {
+  const key = cleanKey(raw);
+  if (!key) throw new Fail("No key received. Add a header named X-Health-Key with your key.", 401);
+  if (!/^[A-Za-z0-9_-]{24,128}$/.test(key)) throw new Fail("That key doesn't look right. Copy it again from Profile → Connections.", 401);
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(key));
   return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -108,7 +113,9 @@ Deno.serve(async (req) => {
     let body: Record<string, unknown>;
     try { body = JSON.parse(text || "{}"); } catch { throw new Fail("Body must be JSON."); }
     if (body.action === "read") return reply(await read(await hashKey(String(body.key || ""))));
-    const key = req.headers.get("X-Health-Key") || "";
+    // X-Health-Key is the documented header; also accept a Bearer token or x-api-key, in case the app's header form differs.
+    const bearer = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+    const key = req.headers.get("X-Health-Key") || req.headers.get("x-api-key") || bearer || "";
     return reply(await ingest(body, await hashKey(key)));
   } catch (e) {
     const f = e instanceof Fail ? e : new Fail("Something went wrong.", 500);
