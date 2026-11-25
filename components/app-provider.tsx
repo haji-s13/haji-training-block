@@ -13,7 +13,7 @@ import { accountError, fetchSessions, latestSavedPlan, loadAccountSettings, save
 import { BUILTIN_SESSIONS, type LibSession } from "@/lib/session-library";
 import { COROS_SERVER, corosConnected, corosHandleRedirect, directCoros, type CorosClient } from "@/lib/coros";
 
-export type Screen = "dashboard" | "builder" | "hyrox" | "paces";
+export type Screen = "dashboard" | "builder" | "hyrox" | "fuel" | "paces";
 type Entry = "guest" | "account" | null;
 export type SaveState = "guest" | "loading" | "saving" | "saved" | "error";
 
@@ -74,6 +74,7 @@ function screenFromHash(): Screen {
   const h = typeof location === "undefined" ? "" : location.hash.slice(1);
   if (h === "builder") return "builder";
   if (h === "hyrox") return "hyrox";
+  if (h === "fuel") return "fuel";
   if (h === "paces" || h === "profile" || h === "connections" || h === "intervals") return "paces";
   return "dashboard";
 }

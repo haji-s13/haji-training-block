@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, Dumbbell, LayoutDashboard, UserRound } from "lucide-react";
+import { CalendarRange, Dumbbell, LayoutDashboard, Salad, UserRound } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useApp, type Screen } from "@/components/app-provider";
 import { SiteHeader } from "@/components/site-header";
@@ -10,11 +10,13 @@ import { PacesScreen } from "@/components/paces/paces-screen";
 import { BuilderScreen } from "@/components/builder/builder-screen";
 import { LiftingScreen } from "@/components/lifting/lifting-screen";
 import { DashboardScreen } from "@/components/dashboard/dashboard-screen";
+import { FuelScreen } from "@/components/nutrition/fuel-screen";
 
 const NAV: { value: Screen; label: string; Icon: typeof UserRound }[] = [
   { value: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
   { value: "builder", label: "Run", Icon: CalendarRange },
   { value: "hyrox", label: "Lifting", Icon: Dumbbell },
+  { value: "fuel", label: "Fuel", Icon: Salad },
   { value: "paces", label: "Profile", Icon: UserRound },
 ];
 
@@ -30,10 +32,10 @@ export default function Page() {
       <Tabs value={screen} onValueChange={(v) => setScreen(v as Screen)} className="gap-0">
         {/* Bottom bar on phones, top tabs from md up. */}
         <div className="no-print fixed inset-x-0 bottom-0 z-40 border-t bg-card pb-[max(8px,env(safe-area-inset-bottom))] md:static md:border-t-0 md:border-b md:bg-background md:pb-0">
-          <TabsList className="mx-auto grid h-16 w-full max-w-6xl grid-cols-4 rounded-none bg-transparent p-0 group-data-[orientation=horizontal]/tabs:h-16 md:flex md:h-12 md:justify-start md:gap-2 md:px-8 md:group-data-[orientation=horizontal]/tabs:h-12">
+          <TabsList className="mx-auto grid h-16 w-full max-w-6xl grid-cols-5 rounded-none bg-transparent p-0 group-data-[orientation=horizontal]/tabs:h-16 md:flex md:h-12 md:justify-start md:gap-2 md:px-8 md:group-data-[orientation=horizontal]/tabs:h-12">
             {NAV.map(({ value, label, Icon }) => (
               <TabsTrigger key={value} value={value}
-                className="h-full flex-col gap-1 rounded-none border-0 text-meta uppercase data-[state=active]:bg-transparent data-[state=active]:text-signal md:flex-row md:gap-2 md:border-b-2 md:border-transparent md:px-4 md:text-body md:normal-case md:tracking-normal md:data-[state=active]:border-signal">
+                className="h-full min-w-0 flex-col gap-1 rounded-none border-0 px-0 text-meta tracking-normal normal-case data-[state=active]:bg-transparent data-[state=active]:text-signal md:flex-row md:gap-2 md:border-b-2 md:border-transparent md:px-4 md:text-body md:normal-case md:tracking-normal md:data-[state=active]:border-signal">
                 <Icon className="size-5 md:size-4" aria-hidden />{label}
               </TabsTrigger>
             ))}
@@ -43,6 +45,7 @@ export default function Page() {
           <TabsContent value="dashboard"><DashboardScreen /></TabsContent>
           <TabsContent value="builder"><BuilderScreen /></TabsContent>
           <TabsContent value="hyrox"><LiftingScreen /></TabsContent>
+          <TabsContent value="fuel"><FuelScreen /></TabsContent>
           <TabsContent value="paces"><PacesScreen /></TabsContent>
         </main>
       </Tabs>

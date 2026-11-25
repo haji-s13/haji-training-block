@@ -111,5 +111,12 @@ The **Supabase functions** GitHub workflow creates the table and deploys the fun
 Tokens). By hand: run `supabase/health_records.sql` in the SQL Editor, then
 `npx supabase functions deploy health --no-verify-jwt --project-ref ykfkgmoltgpxjonvomgw`.
 
+## Food logs (Fuel tab)
+
+What signed-in users eat each day saves to `nutrition_logs` (`supabase/nutrition_logs.sql`): one
+row per user per day, readable and editable only by its owner (row-level security); guests have no
+access. The **Supabase functions** workflow creates it along with `health_records`. By hand: run
+`supabase/nutrition_logs.sql` in the SQL Editor.
+
 The older `renpho` function (direct Renpho login) is no longer used; delete it from the Supabase
 dashboard if you like.
