@@ -59,11 +59,11 @@ function useHealth(key: string | undefined) {
 
 function Card({ icon: Icon, title, busy, onRefresh, children }: { icon: typeof Scale; title: string; busy?: boolean; onRefresh?: () => void; children: React.ReactNode }) {
   return (
-    <section className="flex flex-col gap-4 rounded-lg border bg-card p-4 md:p-6" aria-live="polite">
+    <section className="flex min-w-0 flex-col gap-4 rounded-lg border bg-card p-3 md:p-6" aria-live="polite">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2"><Icon className="size-5" aria-hidden /><h2 className="font-black">{title}</h2></div>
         {onRefresh && (
-          <Button size="icon" variant="ghost" disabled={busy} onClick={onRefresh} aria-label={`Check for new ${title.toLowerCase()} data`}>
+          <Button size="icon" variant="ghost" className="-my-2 -mr-2" disabled={busy} onClick={onRefresh} aria-label={`Check for new ${title.toLowerCase()} data`}>
             <RefreshCw className={busy ? "animate-spin" : undefined} aria-hidden />
           </Button>
         )}
@@ -76,7 +76,7 @@ function Card({ icon: Icon, title, busy, onRefresh, children }: { icon: typeof S
 const Note = ({ children }: { children: React.ReactNode }) => <p className="max-w-[65ch] text-muted-foreground">{children}</p>;
 const Stat = ({ value, label, big }: { value: string; label: string; big?: boolean }) => (
   <div className="flex flex-col">
-    <span className={cn("num", big ? "font-display text-display" : "font-black")}>{value}</span>
+    <span className={cn("num", big ? "font-display text-[1.75rem] leading-8 font-black md:text-display" : "font-black")}>{value}</span>
     <span className="text-meta uppercase text-muted-foreground">{label}</span>
   </div>
 );
@@ -92,7 +92,7 @@ export function HealthCards() {
   const { key } = useHealthKey();
   const { data, error, busy, reload } = useHealth(key || undefined);
   const setup = <Note>Connect Google Health Connect under Connections on Profile to see this here.</Note>;
-  const synced = data?.lastSync ? <p className="text-meta text-muted-foreground">Last sent from your phone <span className="num">{dayLabel(new Date(data.lastSync), true)}</span> · checks every 5 min</p> : null;
+  const synced = data?.lastSync ? <p className="px-1 text-meta text-muted-foreground">Last sent from your phone <span className="num">{dayLabel(new Date(data.lastSync), true)}</span> · checks every 5 min</p> : null;
 
   // Weight
   const u = settings.weightUnit || "lb";
@@ -105,18 +105,18 @@ export function HealthCards() {
   const stageTotal = staged.reduce((a, k) => a + (night!.stages[k] || 0), 0);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-2">
+    <div className="flex flex-col gap-2">
+    <div className="grid grid-cols-2 gap-2 md:gap-8">
       <Card icon={Scale} title="Weight" busy={busy} onRefresh={key ? reload : undefined}>
         {!key ? setup : error ? <Note>{error}</Note> : !data ? <Note>Checking…</Note> : !w ? (
           <Note>No weigh-ins yet. Step on your Renpho scale, open the Renpho app so it saves to Health Connect, then sync HC Webhook.</Note>
         ) : (
-          <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
+          <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
             <Stat big value={fmtWeight(w.latest.kg, u)} label={`Weighed ${dayLabel(new Date(w.latest.ts ?? parseDate(w.latest.date)!.getTime()), !!w.latest.ts)}`} />
             <Stat value={fmtWeight(w.avg7, u)} label="7-day average" />
             {w.weekChange !== null && <Stat value={fmtWeightChange(w.weekChange, u)} label="vs previous 7 days" />}
           </div>
         )}
-        {key && !error && synced}
       </Card>
 
       <Card icon={Moon} title="Sleep" busy={busy} onRefresh={key ? reload : undefined}>
@@ -124,7 +124,7 @@ export function HealthCards() {
           <Note>No sleep yet. It shows here once a sleep session reaches Health Connect (from your watch or phone) and HC Webhook syncs.</Note>
         ) : (
           <>
-            <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
+            <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
               <Stat big value={fmtSleep(night.asleep)} label={`Asleep · woke ${dayLabel(night.end, true)}`} />
               {night.start && <Stat value={`${clock(night.start)}–${clock(night.end)}`} label="In bed" />}
               {avg !== null && ns.length > 1 && <Stat value={fmtSleep(avg)} label={`${Math.min(7, ns.length)}-night average`} />}
@@ -135,11 +135,11 @@ export function HealthCards() {
                   aria-label={staged.map((k) => `${STAGE_LABEL[k]} ${fmtSleep(night.stages[k]!)}`).join(", ")}>
                   {staged.map((k) => <span key={k} className={STAGE_BAR[k]} style={{ width: `${(night.stages[k]! / stageTotal) * 100}%` }} />)}
                 </div>
-                <ul className="flex flex-wrap gap-x-6 gap-y-1 text-meta text-muted-foreground">
+                <ul className="grid gap-x-6 gap-y-1 text-meta text-muted-foreground md:grid-cols-2">
                   {staged.map((k) => (
-                    <li key={k} className="flex items-center gap-2">
+                    <li key={k} className="flex items-center gap-2 whitespace-nowrap">
                       <span className={cn("inline-block size-2 rounded-full", STAGE_BAR[k])} aria-hidden />
-                      <span className="uppercase">{STAGE_LABEL[k]}</span> <span className="num text-foreground">{fmtSleep(night.stages[k]!)}</span>
+                      <span className="uppercase">{STAGE_LABEL[k]}</span> <span className="num ml-auto text-foreground">{fmtSleep(night.stages[k]!)}</span>
                     </li>
                   ))}
                 </ul>
@@ -147,8 +147,9 @@ export function HealthCards() {
             )}
           </>
         )}
-        {key && !error && synced}
       </Card>
+    </div>
+    {key && !error && synced}
     </div>
   );
 }
