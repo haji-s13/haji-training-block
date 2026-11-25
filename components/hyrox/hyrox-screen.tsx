@@ -8,14 +8,12 @@ import { useApp } from "@/components/app-provider";
 import { BlockHeading, PeriodHeading } from "@/components/plans/block-heading";
 import { hxCsv, linkWarnings, type HxSlot } from "@/lib/hyrox";
 import { BAKKEN_HARD, DAYS, QUALITY, type BakkenSlot } from "@/lib/settings";
-import { HyroxSettingsCard } from "./hyrox-settings";
-import { WeakStations } from "./weak-stations";
 import { HyroxTemplateCard } from "./hyrox-template";
 import { HyroxChart } from "./hyrox-chart";
 import { HyroxWeekCard } from "./hyrox-week-card";
 import { hxSendable, useHxSend } from "./use-hx-send";
 
-/** HYROX station program: settings, weak stations, template, chart, then the weeks. Runs stay in the run plan. */
+/** Lifting: template, weekly volume, then the weeks. Runs stay in the run plan. */
 export function HyroxScreen() {
   const { hyrox, settings, calendar, plan } = useApp();
   const { sendIcu, busy } = useHxSend();
@@ -43,15 +41,13 @@ export function HyroxScreen() {
   return (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-2">
-        <h1 className="font-display text-[2rem] leading-10 font-black md:text-display">HYROX Stations</h1>
+        <h1 className="font-display text-[2rem] leading-10 font-black md:text-display">Lifting</h1>
         <p className="max-w-[65ch] text-muted-foreground">
           {hyrox.weeks.length} weeks of station and strength work in 12-week periods of three blocks: strength, station build, then race specific, with absorb weeks and a taper before each race. Running stays in your run plan, on the same dates. Set dates, races and time off on Profile.
         </p>
         <SaveStatus />
       </section>
 
-      <HyroxSettingsCard />
-      <WeakStations />
       <HyroxTemplateCard />
 
       {warns.map((w) => <Alert key={w} variant="destructive"><AlertDescription>{w}</AlertDescription></Alert>)}

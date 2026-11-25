@@ -14,7 +14,7 @@ import { DashboardScreen } from "@/components/dashboard/dashboard-screen";
 const NAV: { value: Screen; label: string; Icon: typeof UserRound }[] = [
   { value: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
   { value: "builder", label: "Run", Icon: CalendarRange },
-  { value: "hyrox", label: "HYROX", Icon: Dumbbell },
+  { value: "hyrox", label: "Lifting", Icon: Dumbbell },
   { value: "paces", label: "Profile", Icon: UserRound },
 ];
 
