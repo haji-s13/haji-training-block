@@ -29,7 +29,7 @@ export function HyroxWeekCard({ wk }: { wk: HxWeek }) {
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
           <span className={cn("size-2 shrink-0 self-center rounded-full", PHASE_DOT[wk.phaseKey])} aria-hidden />
           <span className="font-black whitespace-nowrap">Week {wk.n}</span>
-          <span className="font-extralight text-muted-foreground">{fmtShortDate(wk.weekStart)} · {wk.phase}{wk.light && wk.kind === "absorb" ? " · lighter" : ""}{wk.raceNames.length ? ` · ${wk.raceNames.join(", ")}` : ""}</span>
+          <span className="font-extralight text-muted-foreground">{fmtShortDate(wk.weekStart)} · {wk.phase}{wk.light && wk.kind === "absorb" && !wk.program ? " · lighter" : ""}{wk.raceNames.length ? ` · ${wk.raceNames.join(", ")}` : ""}</span>
         </span>
       </button>
       {open && (
@@ -37,8 +37,10 @@ export function HyroxWeekCard({ wk }: { wk: HxWeek }) {
           <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-border bg-muted px-4 py-2 md:px-6">
             <div className="min-w-0">
               <p className="text-meta uppercase text-muted-foreground">Week total</p>
+              {"note" in wk && typeof wk.note === "string" && wk.note && <p className="font-extralight">{wk.note}</p>}
               <p className="num font-extralight text-muted-foreground">
                 <span className="font-black text-foreground">~{fmtDuration(wk.totalMin * 60)}</span> · {wk.sessions} session{wk.sessions === 1 ? "" : "s"}
+                {"totalSets" in wk && typeof wk.totalSets === "number" && <> · {wk.totalSets} sets</>}
                 {weak.length > 0 && <> · {weak.map((st) => `${STATION[st].short} ${fmtVol(st, wk.vol[st] || 0)}`).join(" · ")}</>}
               </p>
             </div>

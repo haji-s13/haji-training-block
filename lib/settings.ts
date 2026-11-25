@@ -1,5 +1,6 @@
 import { nextMonday, type Units } from "./format";
 import { defaultHyrox, normalizeHyrox, type HyroxSettings } from "./hyrox";
+import { defaultLifting, normalizeLifting, type LiftSettings } from "./lifting";
 import { addDays, defaultEnd, mondayOf, newId, type Race, type Vacation } from "./calendar";
 import { isoDate, parseDate } from "./format";
 import { buildModel } from "./vdot";
@@ -47,6 +48,8 @@ export interface Settings {
   paceTests?: { period: number; time: string }[];
   /** HYROX station program. Shares startDate with the run plan and saves with it. */
   hyrox: HyroxSettings;
+  /** 4-day lifting routine (the Lifting tab). */
+  lifting: LiftSettings;
 }
 
 export const SESSION_LABELS: Record<SessionType, string> = {
@@ -98,6 +101,7 @@ export function defaultSettings(): Settings {
     bakkenTemplate: ["easy", "double", "easy", "double", "easy", "x", "longrun"],
     lowMileage: 50,
     hyrox: defaultHyrox(),
+    lifting: defaultLifting(),
   };
 }
 
@@ -111,6 +115,7 @@ export function normalizeSettings(raw: unknown): Settings {
   if (!(Number(s.lowMileage) >= 0)) s.lowMileage = d.lowMileage;
   if (typeof s.bakkenDeloads !== "boolean") s.bakkenDeloads = d.bakkenDeloads;
   s.hyrox = normalizeHyrox(s.hyrox);
+  s.lifting = normalizeLifting(s.lifting);
   // Older saves were always 12 weeks with the race in week 12.
   const raw0 = (raw && typeof raw === "object" ? raw : {}) as Partial<Settings> & { hyrox?: { finalWeek?: string; raceDay?: number } };
   if (!raw0.endDate) s.endDate = defaultEnd(s.startDate);

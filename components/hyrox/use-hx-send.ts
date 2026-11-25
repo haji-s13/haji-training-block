@@ -12,8 +12,8 @@ export function hxIcuEvent(wk: HxWeek, i: number): IcuEvent {
   const d = wk.days[i];
   const day = isoDate(hxDayDate(wk, i));
   return {
-    category: "WORKOUT", type: "WeightTraining", start_date_local: `${day}T00:00:00`, name: `HYROX · ${d.title}`,
-    description: hxDayText(wk, d), external_id: `htb-hx-${day}`, moving_time: Math.round(d.min * 60),
+    category: "WORKOUT", type: "WeightTraining", start_date_local: `${day}T00:00:00`, name: `${wk.program ?? "HYROX"} · ${d.title}`,
+    description: hxDayText(wk, d), external_id: wk.program ? `htb-lift-${day}` : `htb-hx-${day}`, moving_time: Math.round(d.min * 60),
   };
 }
 
@@ -25,7 +25,7 @@ export function useHxSend() {
     setBusy(key);
     try {
       const n = await icuPush(settings.icuAthlete, items.map(({ wk, i }) => hxIcuEvent(wk, i)));
-      toast.success(`Sent ${n} HYROX session${n === 1 ? "" : "s"} (${label}) to intervals.icu.`);
+      toast.success(`Sent ${n} ${items[0].wk.program ?? "HYROX"} session${n === 1 ? "" : "s"} (${label}) to intervals.icu.`);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {

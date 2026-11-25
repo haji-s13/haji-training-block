@@ -8,13 +8,13 @@ import { HomeScreen } from "@/components/home-screen";
 import { NewPasswordCard } from "@/components/auth/new-password-card";
 import { PacesScreen } from "@/components/paces/paces-screen";
 import { BuilderScreen } from "@/components/builder/builder-screen";
-import { HyroxScreen } from "@/components/hyrox/hyrox-screen";
+import { LiftingScreen } from "@/components/lifting/lifting-screen";
 import { DashboardScreen } from "@/components/dashboard/dashboard-screen";
 
 const NAV: { value: Screen; label: string; Icon: typeof UserRound }[] = [
   { value: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
   { value: "builder", label: "Run", Icon: CalendarRange },
-  { value: "hyrox", label: "HYROX", Icon: Dumbbell },
+  { value: "hyrox", label: "Lifting", Icon: Dumbbell },
   { value: "paces", label: "Profile", Icon: UserRound },
 ];
 
@@ -42,7 +42,7 @@ export default function Page() {
         <main className="mx-auto w-full max-w-6xl px-[max(16px,env(safe-area-inset-left))] pt-8 pb-[calc(144px+env(safe-area-inset-bottom))] md:px-8 md:pb-16">
           <TabsContent value="dashboard"><DashboardScreen /></TabsContent>
           <TabsContent value="builder"><BuilderScreen /></TabsContent>
-          <TabsContent value="hyrox"><HyroxScreen /></TabsContent>
+          <TabsContent value="hyrox"><LiftingScreen /></TabsContent>
           <TabsContent value="paces"><PacesScreen /></TabsContent>
         </main>
       </Tabs>
