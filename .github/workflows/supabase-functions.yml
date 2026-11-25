@@ -20,4 +20,4 @@ jobs:
         with:
           version: latest
       - name: Deploy renpho
-        run: supabase functions deploy renpho --no-verify-jwt --project-ref "$PROJECT_REF"
+        run: supabase functions deploy renpho --no-verify-jwt --project-ref "$PROJECT_REF" --yes
