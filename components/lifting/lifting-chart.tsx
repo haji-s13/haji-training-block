@@ -23,7 +23,7 @@ function barPath(x: number, y: number, w: number, h: number) {
 
 interface Row { label: string; value: number; wk: LiftWeek }
 
-/** Hard sets per week by phase, then average weekly sets per muscle against the 16-18 target. */
+/** Hard sets per week by phase, then average weekly sets per muscle against the 20-set target. */
 export function LiftingChart() {
   const { hyrox } = useApp();
   const [narrow, setNarrow] = useState(false);
@@ -99,7 +99,7 @@ export function LiftingChart() {
       <div className="flex flex-col gap-2 border-t pt-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="text-meta uppercase text-muted-foreground">Sets Per Muscle · Weekly Average</h3>
-          <p className="text-meta text-muted-foreground">indirect work counts half · target 16-18</p>
+          <p className="text-meta text-muted-foreground">indirect work counts half · target 20</p>
         </div>
         <ul className="flex flex-col gap-2">
           {avg.map(({ m, v }) => {

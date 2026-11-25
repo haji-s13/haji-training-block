@@ -114,3 +114,7 @@ Between the AM and PM sessions, eat about 1-1.2 g/kg/h of carbohydrate in the fi
 - Running at Bakken's structure but at about half his 120 km minimum volume is untested. This is a reasoned adaptation, not his prescription.
 - Paces are estimated from your 10-mile pace in COROS (~4:03/km). Re-set them from a race or time trial if available.
 - Lifting evidence, confidence tags and sources are in [report.md](report.md). Running structure and sources are in the Norwegian method report.
+
+## Update (2026-11-25): 20 sets per upper-body muscle
+
+At Haji's request, upper-body volume in the app (`lib/lifting.ts`) is raised from 16-18 to **20 hard sets per muscle per week** (chest, back, side delts, rear delts, biceps, triceps; indirect work counts half), with **no exercise above 4 sets**. Added: dips + face pulls and cable fly + machine lateral raise on Push, reverse pec deck and a face pull + cable lateral raise superset on Upper; lat pulldown, single-arm pulldown, EZ curl and pushdown to 4 sets; the two 5-set lateral raises cut to 4. Legs are unchanged (kept light for double-threshold running). 20 sets is above this note's 16-18 range, where extra sets still help but give less each (report, Finding 1); if recovery or threshold sessions suffer, go back to 16-18. Sessions now run about 80-90 minutes.

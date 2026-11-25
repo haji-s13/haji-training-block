@@ -2,7 +2,8 @@ import type { Calendar, CalWeek } from "./calendar";
 import type { HxBlock, HxDay, HxPlan, HxWeek } from "./hyrox";
 
 /* 4-day lifting routine (one leg day) for a Norwegian double-threshold week.
- * Source: research/lifting-4-day-norwegian-doubles.md (v2, 16-18 upper-body sets per muscle).
+ * Source: research/lifting-4-day-norwegian-doubles.md (v2, 16-18 upper-body sets per muscle), raised
+ * to 20 per upper-body muscle (rear delts included) at the user's request, at most 4 sets per exercise. Legs unchanged.
  * Push Mon, Legs Tue after both threshold sessions, Pull Wed, Upper Fri. No gym Thu or Sat.
  * The plan reuses the HYROX plan's week/day shapes, so the week cards, dashboard and
  * intervals.icu export work unchanged. */
@@ -11,12 +12,12 @@ export type LiftSlot = "off" | "push" | "legs" | "pull" | "upper";
 export type Muscle = "chest" | "back" | "sideDelts" | "rearDelts" | "biceps" | "triceps" | "quads" | "glutes" | "hamstrings" | "calves";
 
 export const MUSCLES: { key: Muscle; label: string; target?: [number, number] }[] = [
-  { key: "chest", label: "Chest", target: [16, 18] },
-  { key: "back", label: "Back", target: [16, 18] },
-  { key: "sideDelts", label: "Side delts", target: [16, 18] },
-  { key: "biceps", label: "Biceps", target: [16, 18] },
-  { key: "triceps", label: "Triceps", target: [16, 18] },
-  { key: "rearDelts", label: "Rear delts" },
+  { key: "chest", label: "Chest", target: [20, 22] },
+  { key: "back", label: "Back", target: [20, 22] },
+  { key: "sideDelts", label: "Side delts", target: [20, 22] },
+  { key: "biceps", label: "Biceps", target: [20, 22] },
+  { key: "triceps", label: "Triceps", target: [20, 22] },
+  { key: "rearDelts", label: "Rear delts", target: [20, 22] },
   { key: "quads", label: "Quads" },
   { key: "glutes", label: "Glutes" },
   { key: "hamstrings", label: "Hamstrings" },
@@ -53,13 +54,21 @@ const PULL = { biceps: 0.5 };
 
 const SESSIONS: Record<Exclude<LiftSlot, "off">, Session> = {
   push: {
-    title: "Push", min: 70, items: [
+    title: "Push", min: 85, items: [
       { name: "Barbell or dumbbell bench press", sets: 4, reps: "6-8", rir: "1-2", muscles: { chest: 1, ...PRESS } },
       { name: "Seated dumbbell overhead press", sets: 4, reps: "8-10", rir: "1-2", muscles: { chest: 0.5, sideDelts: 0.5, ...PRESS } },
       { name: "Incline dumbbell press", sets: 4, reps: "8-10", rir: "1", muscles: { chest: 1, ...PRESS } },
       { superset: [
-        { name: "Cable lateral raise", sets: 5, reps: "12-20", rir: "0-1", muscles: { sideDelts: 1 } },
+        { name: "Cable lateral raise", sets: 4, reps: "12-20", rir: "0-1", muscles: { sideDelts: 1 } },
         { name: "Overhead cable triceps extension", sets: 4, reps: "10-15", rir: "0-1", muscles: { triceps: 1 } },
+      ] },
+      { superset: [
+        { name: "Dips (assisted if needed)", sets: 3, reps: "8-12", rir: "1", muscles: { triceps: 1, chest: 0.5 } },
+        { name: "Face pull", sets: 4, reps: "12-20", rir: "0-1", muscles: { rearDelts: 1 } },
+      ] },
+      { superset: [
+        { name: "Cable or pec-deck fly", sets: 2, reps: "12-15", rir: "0-1", muscles: { chest: 1 } },
+        { name: "Machine lateral raise", sets: 3, reps: "12-20", rir: "0-1", muscles: { sideDelts: 1 } },
       ] },
     ],
   },
@@ -73,10 +82,10 @@ const SESSIONS: Record<Exclude<LiftSlot, "off">, Session> = {
     ],
   },
   pull: {
-    title: "Pull", min: 75, items: [
+    title: "Pull", min: 80, items: [
       { name: "Pull-ups, weighted if able", sets: 4, reps: "6-10", rir: "1-2", muscles: { back: 1, ...PULL } },
       { name: "Chest-supported row", sets: 4, reps: "8-10", rir: "1", muscles: { back: 1, rearDelts: 0.5, ...PULL } },
-      { name: "Lat pulldown", sets: 3, reps: "10-12", rir: "1", muscles: { back: 1, ...PULL } },
+      { name: "Lat pulldown", sets: 4, reps: "10-12", rir: "1", muscles: { back: 1, ...PULL } },
       { superset: [
         { name: "Rear-delt fly", sets: 4, reps: "12-20", rir: "0-1", muscles: { rearDelts: 1 } },
         { name: "Dumbbell lateral raise", sets: 4, reps: "12-20", rir: "0-1", muscles: { sideDelts: 1 } },
@@ -88,19 +97,26 @@ const SESSIONS: Record<Exclude<LiftSlot, "off">, Session> = {
     ],
   },
   upper: {
-    title: "Upper", min: 75, items: [
+    title: "Upper", min: 90, items: [
       { superset: [
         { name: "Machine chest press or dips", sets: 4, reps: "8-12", rir: "1", muscles: { chest: 1, ...PRESS } },
         { name: "Seated cable row", sets: 4, reps: "10-12", rir: "1", muscles: { back: 1, rearDelts: 0.5, ...PULL } },
       ] },
       { superset: [
         { name: "Machine or Smith incline press", sets: 3, reps: "8-12", rir: "1", muscles: { chest: 1, ...PRESS } },
-        { name: "Single-arm cable pulldown", sets: 3, reps: "10-15", rir: "1", muscles: { back: 1, ...PULL } },
+        { name: "Single-arm cable pulldown", sets: 4, reps: "10-15", rir: "1", muscles: { back: 1, ...PULL } },
       ] },
-      { name: "Dumbbell lateral raise", sets: 5, reps: "12-20", rir: "0-1", muscles: { sideDelts: 1 } },
       { superset: [
-        { name: "EZ-bar curl", sets: 3, reps: "10-15", rir: "0-1", muscles: { biceps: 1 } },
-        { name: "Triceps pushdown", sets: 3, reps: "10-15", rir: "0-1", muscles: { triceps: 1 } },
+        { name: "Dumbbell lateral raise", sets: 4, reps: "12-20", rir: "0-1", muscles: { sideDelts: 1 } },
+        { name: "Reverse pec deck", sets: 4, reps: "12-20", rir: "0-1", muscles: { rearDelts: 1 } },
+      ] },
+      { superset: [
+        { name: "EZ-bar curl", sets: 4, reps: "10-15", rir: "0-1", muscles: { biceps: 1 } },
+        { name: "Triceps pushdown", sets: 4, reps: "10-15", rir: "0-1", muscles: { triceps: 1 } },
+      ] },
+      { superset: [
+        { name: "Face pull", sets: 4, reps: "12-20", rir: "0-1", muscles: { rearDelts: 1 } },
+        { name: "Cable lateral raise", sets: 3, reps: "12-20", rir: "0-1", muscles: { sideDelts: 1 } },
       ] },
     ],
     optional: [
@@ -122,7 +138,7 @@ interface Spec { kind: LiftKind; phase: string; phaseKey: HxWeek["phaseKey"]; li
 
 const SPECS: Record<LiftKind, Omit<Spec, "kind">> = {
   intro: { phase: "Intro", phaseKey: "base", light: false, note: "Build-up: one set fewer on every exercise, legs at 3 RIR." },
-  full: { phase: "Full sets", phaseKey: "build", light: false, note: "Full sets: 16-18 hard sets per upper-body muscle this week." },
+  full: { phase: "Full sets", phaseKey: "build", light: false, note: "Full sets: 20 hard sets per upper-body muscle this week." },
   progress: { phase: "Add load", phaseKey: "peak", light: false, note: "Hold the sets. Add load or reps, not more sets." },
   deload: { phase: "Deload", phaseKey: "build", light: true, note: "Deload: half the sets, same loads." },
   race: { phase: "Race week", phaseKey: "trial", light: true, note: "Race week: upper body at half sets, no legs session." },

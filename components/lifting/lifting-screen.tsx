@@ -40,7 +40,7 @@ export function LiftingScreen() {
       <section className="flex flex-col gap-2">
         <h1 className="font-display text-[2rem] leading-10 font-black md:text-display">Lifting</h1>
         <p className="max-w-[65ch] text-muted-foreground">
-          {hyrox.weeks.length} weeks of a 4-day routine with one leg day: push, legs, pull and upper, at 16-18 hard sets per upper-body muscle a week. The first 6 weeks build up, then every 7th week is a deload. Running stays in your run plan, on the same dates.
+          {hyrox.weeks.length} weeks of a 4-day routine with one leg day: push, legs, pull and upper, at 20 hard sets per upper-body muscle a week (no exercise over 4 sets; legs kept light for running). The first 6 weeks build up, then every 7th week is a deload. Running stays in your run plan, on the same dates.
         </p>
         <SaveStatus />
       </section>
