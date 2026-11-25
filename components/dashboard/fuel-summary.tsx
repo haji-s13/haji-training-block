@@ -7,7 +7,8 @@ import { useBodyWeight } from "@/components/nutrition/use-body-weight";
 import { useFoodLogs } from "@/components/nutrition/use-food-logs";
 import { openFuelOn } from "@/components/nutrition/fuel-screen";
 import { isoDate } from "@/lib/format";
-import { fuelDay } from "@/lib/fuel-day";
+import { fuelWeek } from "@/lib/fuel-day";
+import { mondayOf } from "@/lib/calendar";
 import { dailyFromMeals, GEARS, kcalOf } from "@/lib/nutrition";
 
 const MACROS = [
@@ -23,7 +24,10 @@ export function FuelSummary({ date }: { date: Date }) {
   const { kg, meals } = useBodyWeight();
   const iso = isoDate(date);
   const food = useFoodLogs(iso, iso);
-  const day = useMemo(() => fuelDay(date, calendar, plan, hyrox, kg, settings.nutrition), [date, calendar, plan, hyrox, kg, settings.nutrition]);
+  const day = useMemo(() => {
+    const monday = mondayOf(date);
+    return fuelWeek(monday, calendar, plan, hyrox, kg, settings.nutrition).days.find((d) => d.iso === isoDate(date))!;
+  }, [date, calendar, plan, hyrox, kg, settings.nutrition]);
   const syncedDays = useMemo(() => dailyFromMeals(meals), [meals]);
   const log = food.logs[iso] ?? syncedDays[iso];
   const t = day.targets;

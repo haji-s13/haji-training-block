@@ -17,9 +17,9 @@ import { useBodyWeight } from "@/components/nutrition/use-body-weight";
 import { useFoodLogs } from "@/components/nutrition/use-food-logs";
 import { addDays, mondayOf } from "@/lib/calendar";
 import { dist, isoDate, parseDate } from "@/lib/format";
-import { fuelDay, type FuelDay } from "@/lib/fuel-day";
-import { burnKcal, dailyFromMeals, GEARS, kcalOf, mergeEaten, type SyncedDay, refuel, underFuelled, type FoodLog, type Gear, fmtPerLb } from "@/lib/nutrition";
-import { fmtWeight } from "@/lib/weight";
+import { fuelWeek, type FuelDay } from "@/lib/fuel-day";
+import { burnKcal, dailyFromMeals, GEARS, kcalOf, mergeEaten, type SyncedDay, refuel, underFuelled, type FoodLog, type Gear, fmtPerLb, ASSUMED_BODY_FAT, EA_FLOOR, EA_WARN, gainRateOf, loseRateOf, type WeekSummary, MAX_DAY_SURPLUS } from "@/lib/nutrition";
+import { fmtWeight, KG_PER_LB } from "@/lib/weight";
 import { cn } from "@/lib/utils";
 
 const SHORT: Record<Gear, string> = { rest: "Rest", easy: "Easy", hard: "Hard", double: "2×T" };
@@ -56,9 +56,9 @@ export function FuelScreen() {
   const synced = useMemo(() => dailyFromMeals(meals), [meals]);
   const eaten = useMemo(() => mergeEaten(food.logs, synced), [food.logs, synced]);
 
-  const days = useMemo<FuelDay[]>(() => Array.from({ length: 7 }, (_, k) =>
-    fuelDay(addDays(parseDate(from) || today(), k), calendar, plan, hyrox, kg, settings.nutrition)),
-  [from, calendar, plan, hyrox, kg, settings.nutrition]);
+  const week = useMemo(() => fuelWeek(parseDate(from) || today(), calendar, plan, hyrox, kg, settings.nutrition),
+    [from, calendar, plan, hyrox, kg, settings.nutrition]);
+  const days = week.days;
 
   const day = days.find((d) => d.iso === sel) ?? days[0];
   const isToday = sel === isoDate(today());
@@ -142,7 +142,7 @@ export function FuelScreen() {
           <LogCard key={day.iso} day={day} label={shortName(day.date)} log={food.logs[day.iso]} synced={synced[day.iso]} saving={food.saving}
             signedIn={food.signedIn} onSave={food.save} onDelete={food.remove} />
 
-          <WeekList days={days} kg={kg} logs={eaten} />
+          <WeekList days={days} kg={kg} logs={eaten} summary={week.summary} />
         </>
       )}
     </div>
@@ -318,7 +318,54 @@ function LogCard({ day, label, log, synced, saving, signedIn, onSave, onDelete }
   );
 }
 
-function WeekList({ days, kg, logs }: { days: FuelDay[]; kg: number; logs: Record<string, FoodLog> }) {
+/** The week's plan against estimated burn, the goal's expected change, and energy availability. */
+function WeekPlan({ s, kg }: { s: WeekSummary; kg: number }) {
+  const { settings } = useApp();
+  const nut = settings.nutrition;
+  const lb = (k: number) => `${k > 0 ? "+" : k < 0 ? "−" : ""}${Math.abs(k / KG_PER_LB).toFixed(1)} lb`;
+  const goalLine = nut.goal === "lose"
+    ? <>Goal: lose <span className="num">{loseRateOf(nut)}%</span> a week (<span className="num">{lb(-(loseRateOf(nut) / 100) * kg)}</span>). This week&apos;s plan: <span className="num font-black">{lb(s.kgPerWeek)}</span>.</>
+    : nut.goal === "gain"
+      ? <>Goal: gain <span className="num">{gainRateOf(nut)}%</span> a week (<span className="num">{lb((gainRateOf(nut) / 100) * kg)}</span>). This week&apos;s plan: <span className="num font-black">{lb(s.kgPerWeek)}</span>.</>
+      : <>Goal: maintain.</>;
+  return (
+    <div className="flex flex-col gap-2 border-b pb-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div><p className="text-meta uppercase text-muted-foreground">Planned</p><p className="num font-black">{n(s.intake)} kcal</p></div>
+        <div><p className="text-meta uppercase text-muted-foreground">Est. burn</p><p className="num font-black">{s.burn === null ? "–" : `${n(s.burn)} kcal`}</p></div>
+      </div>
+      <p className="text-muted-foreground">{goalLine}{s.burn === null
+        ? <> Add sex, birth year and height (or body fat) on Profile to aim this at your estimated burn instead of the maintenance targets.</>
+        : <> Measured against your estimated burn.</>}</p>
+      {s.short && nut.goal === "lose" && (
+        <Alert>
+          <TriangleAlert aria-hidden />
+          <AlertTitle className="font-black">This week can&apos;t reach the goal</AlertTitle>
+          <AlertDescription>
+            Keeping every day fuelled (at least {EA_FLOOR} kcal per kg of lean mass, enough carbs and your protein) and hard days within their carb band, this week comes to about <span className="num">{lb(s.kgPerWeek)}</span>. To lose faster, add a rest day or ease the volume. The burn is an estimate, so let your weight trend decide.
+          </AlertDescription>
+        </Alert>
+      )}
+      {s.short && nut.goal === "gain" && (
+        <Alert>
+          <TriangleAlert aria-hidden />
+          <AlertTitle className="font-black">This week can&apos;t reach the goal</AlertTitle>
+          <AlertDescription>
+            At most <span className="num">{MAX_DAY_SURPLUS}</span> kcal is added to a day (more mostly adds fat), so this week comes to about <span className="num">{lb(s.kgPerWeek)}</span>. Lower the target, or let your weight trend show whether it&apos;s enough.
+          </AlertDescription>
+        </Alert>
+      )}
+      <p className={cn("font-extralight text-muted-foreground", s.eaAvg < EA_WARN && "font-black text-foreground")}>
+        Energy availability: <span className="num">{Math.round(s.eaAvg)}</span> kcal/kg lean mass on average, lowest day <span className="num">{Math.round(s.eaMin)}</span>
+        {s.eaAvg < EA_WARN ? ". That's low: watch for tiredness, illness or niggles, and eat more if they show up." : "."}
+        {s.leanAssumed && <> Body fat assumed {ASSUMED_BODY_FAT}%; add yours on Profile.</>}
+      </p>
+      <p className="font-extralight text-muted-foreground">These are estimates. Your weight trend is the real check: adjust the goal if it doesn&apos;t move as planned.</p>
+    </div>
+  );
+}
+
+function WeekList({ days, kg, logs, summary }: { days: FuelDay[]; kg: number; logs: Record<string, FoodLog>; summary: WeekSummary | null }) {
   const { settings } = useApp();
   const unit = settings.units;
   const logged = days
@@ -330,6 +377,7 @@ function WeekList({ days, kg, logs }: { days: FuelDay[]; kg: number; logs: Recor
     <Card className="gap-4 py-6">
       <CardHeader className="px-4 md:px-6"><CardTitle className="text-meta uppercase">This week</CardTitle></CardHeader>
       <CardContent className="flex flex-col px-4 md:px-6">
+        {summary && <WeekPlan s={summary} kg={kg} />}
         {days.map((d) => {
           const t = d.targets!;
           const log = logs[d.iso];
