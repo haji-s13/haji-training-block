@@ -3,18 +3,20 @@
 import { LogOut, UserRound } from "lucide-react";
 import { useApp } from "@/components/app-provider";
 import { authEnabled } from "@/lib/supabase";
+import { BrandMark } from "@/components/brand-mark";
 
-/** Two-line wordmark: Haji Training Block, with the method underneath. */
+/** Logo mark and two-line wordmark: Haji Training Block, with the slogan underneath. */
 export function Wordmark() {
   return (
     <span className="flex min-w-0 items-center gap-2">
-      <span className="flex h-9 w-10 shrink-0 items-center justify-center rounded-md bg-signal font-display text-[0.9375rem] leading-none tracking-tight font-black text-signal-foreground" aria-hidden>
-        H<span className="font-extralight">/</span>T
+      <span className="flex h-9 w-10 shrink-0 items-center justify-center rounded-md bg-signal text-signal-foreground" aria-hidden>
+        <BrandMark className="size-7" />
       </span>
       <span className="flex min-w-0 flex-col">
         <span className="truncate font-display text-[1.125rem] leading-6 font-black tracking-tight md:text-[1.25rem]">
           Haji <span className="font-extralight text-signal">·</span> Training Block
         </span>
+        <span className="truncate text-meta uppercase text-hero-muted">Run fast. Lift heavy.</span>
       </span>
     </span>
   );
