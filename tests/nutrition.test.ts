@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { burnKcal, dayTargets, defaultNutrition, fromInches, gearFor, kcalOf, normalizeNutrition, refuel, restingKcal, toInches, underFuelled } from "../lib/nutrition";
+import { DEFAULT_PROTEIN_PER_KG, burnKcal, dayTargets, defaultNutrition, fromInches, gearFor, kcalOf, normalizeNutrition, refuel, restingKcal, toInches, underFuelled } from "../lib/nutrition";
 import { normalizeSettings } from "../lib/settings";
 
 const n = defaultNutrition();
@@ -15,7 +15,8 @@ test("gearFor maps run sessions to carb gears", () => {
 
 test("dayTargets follows the report's g/kg ranges", () => {
   const kg = 80;
-  const easy = dayTargets("easy", kg, n), hard = dayTargets("hard", kg, n), dbl = dayTargets("double", kg, n);
+  const low = { ...n, proteinPerKg: 1.6 };
+  const easy = dayTargets("easy", kg, low), hard = dayTargets("hard", kg, low), dbl = dayTargets("double", kg, low);
   assert.equal(easy.carbs, 440);   // 5.5 g/kg
   assert.equal(hard.carbs, 600);   // 7.5 g/kg
   assert.equal(dbl.carbs, 720);    // 9 g/kg
@@ -85,7 +86,7 @@ test("underFuelled needs the last 3 logged days all under 90%", () => {
 
 test("normalizeNutrition drops bad values and fills defaults; settings carry it", () => {
   const r = normalizeNutrition({ sex: "x", birthYear: "1990", heightIn: 70, bodyFat: 99, proteinPerKg: 0, goal: "lose" });
-  assert.deepEqual(r, { sex: undefined, birthYear: undefined, heightIn: 70, weightLb: undefined, bodyFat: undefined, proteinPerKg: 1.6, activity: "moderate", goal: "lose" });
+  assert.deepEqual(r, { sex: undefined, birthYear: undefined, heightIn: 70, weightLb: undefined, bodyFat: undefined, proteinPerKg: DEFAULT_PROTEIN_PER_KG, activity: "moderate", goal: "lose" });
   assert.deepEqual(normalizeSettings({}).nutrition, normalizeNutrition(undefined));
 });
 
@@ -99,4 +100,13 @@ test("rates show per pound", async () => {
   assert.equal(fmtPerLb(1.6), "0.73");
   assert.equal(fmtPerLb(9), "4.08");
   assert.equal(fmtPerLb(2.0), "0.91");
+});
+
+test("default protein is 1 g per lb on every day, and the old 1.6 g/kg default moves to it", async () => {
+  const { fmtPerLb } = await import("../lib/nutrition");
+  assert.equal(fmtPerLb(defaultNutrition().proteinPerKg), "1.00");
+  const lb = 185.8, kg = lb * 0.45359237;
+  for (const g of ["rest", "easy", "hard", "double"] as const) assert.equal(dayTargets(g, kg, n).protein, Math.round(lb));
+  assert.equal(normalizeNutrition({ proteinPerKg: 1.6 }).proteinPerKg, DEFAULT_PROTEIN_PER_KG);
+  assert.equal(normalizeNutrition({ proteinPerKg: 1.61 }).proteinPerKg, 1.61); // a typed 0.73 g/lb stays
 });

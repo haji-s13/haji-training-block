@@ -20,14 +20,19 @@ export interface NutritionSettings {
   weightLb?: number;
   /** Body fat %, typed by hand. */
   bodyFat?: number;
-  /** Protein on rest and easy days, g per kg. Hard days use at least 1.8, double days 2.0. */
+  /** Daily protein, g per kg (shown per lb). Default 1 g/lb. Hard days use at least 1.8 g/kg, double days 2.0. */
   proteinPerKg: number;
   /** Day-to-day activity outside training. */
   activity: Activity;
   goal: Goal;
 }
 
-export const defaultNutrition = (): NutritionSettings => ({ proteinPerKg: 1.6, activity: "moderate", goal: "maintain" });
+/** 1 g of protein per lb of body weight, in g/kg (about 2.2). */
+export const DEFAULT_PROTEIN_PER_KG = 1 / KG_PER_LB;
+/** The first default (1.6 g/kg); saves that still hold it move to the new default. Typed values are never exactly 1.6. */
+const OLD_DEFAULT_PROTEIN = 1.6;
+
+export const defaultNutrition = (): NutritionSettings => ({ proteinPerKg: DEFAULT_PROTEIN_PER_KG, activity: "moderate", goal: "maintain" });
 
 const num = (v: unknown, lo: number, hi: number) => (typeof v === "number" && Number.isFinite(v) && v >= lo && v <= hi ? v : undefined);
 
@@ -40,7 +45,7 @@ export function normalizeNutrition(raw: unknown): NutritionSettings {
     heightIn: num(r.heightIn, 36, 96),
     weightLb: num(r.weightLb, 60, 600),
     bodyFat: num(r.bodyFat, 3, 60),
-    proteinPerKg: num(r.proteinPerKg, 1, 3) ?? d.proteinPerKg,
+    proteinPerKg: r.proteinPerKg === OLD_DEFAULT_PROTEIN ? d.proteinPerKg : num(r.proteinPerKg, 1, 3) ?? d.proteinPerKg,
     activity: r.activity === "low" || r.activity === "high" ? r.activity : d.activity,
     goal: r.goal === "lose" || r.goal === "gain" ? r.goal : d.goal,
   };
