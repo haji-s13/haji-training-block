@@ -84,7 +84,7 @@ export function BodyCard() {
   const lb = kg ? (kg / KG_PER_LB).toFixed(1) : null;
 
   return (
-    <CollapsibleCard storageKey="body" title="Body & nutrition"
+    <CollapsibleCard storageKey="body" title="Body & Nutrition"
       summary={[lb ? `${lb} lb` : null, n.bodyFat ? `${n.bodyFat}% body fat` : null, `${n.goal[0].toUpperCase()}${n.goal.slice(1)}`].filter(Boolean).join(" · ")}>
         <p className="max-w-[65ch] font-extralight text-muted-foreground">
           Fuel targets come from your weight and the day&apos;s training. Body fat, height, age and sex only feed the estimated daily burn shown on Fuel.
