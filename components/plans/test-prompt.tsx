@@ -1,5 +1,6 @@
 "use client";
 
+import { openCard } from "@/components/plans/collapsible-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/components/app-provider";
@@ -11,7 +12,7 @@ export function TestPrompt() {
   const n = testsDue[0] + 1;
   const enter = () => {
     setScreen("paces");
-    setTimeout(() => document.getElementById("pace-tests")?.scrollIntoView({ behavior: "smooth" }), 300);
+    openCard("pace-tests"); setTimeout(() => document.getElementById("pace-tests")?.scrollIntoView({ behavior: "smooth" }), 300);
   };
   return (
     <Alert className="border-signal bg-signal-soft">

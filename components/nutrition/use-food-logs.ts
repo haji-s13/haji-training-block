@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useApp } from "@/components/app-provider";
 import type { FoodLog } from "@/lib/nutrition";
-import { authEnabled, foodLogError, loadFoodLogs, saveFoodLog } from "@/lib/supabase";
+import { authEnabled, deleteFoodLog, foodLogError, loadFoodLogs, saveFoodLog } from "@/lib/supabase";
 
 /** Guests' logs for this page load: memory only, so they survive switching tabs but not a reload. */
 let guestLogs: Record<string, FoodLog> = {};
@@ -57,5 +57,23 @@ export function useFoodLogs(from: string, to: string) {
     }
   }, [signedIn, user]);
 
-  return { logs, save, loading, saving, signedIn };
+  const remove = useCallback(async (date: string) => {
+    const drop = (cur: Record<string, FoodLog>) => { const next = { ...cur }; delete next[date]; return next; };
+    if (!signedIn || !user) { guestLogs = drop(guestLogs); setLogs(guestLogs); return true; }
+    setSaving(true);
+    try {
+      await deleteFoodLog(date);
+      if (userId.current !== user.id) return false;
+      setLogs(drop);
+      toast.success("Day deleted");
+      return true;
+    } catch (e) {
+      toast.error(foodLogError(e));
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }, [signedIn, user]);
+
+  return { logs, save, remove, loading, saving, signedIn };
 }

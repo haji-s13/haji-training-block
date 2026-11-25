@@ -127,6 +127,11 @@ export async function saveFoodLog(userId: string, log: FoodLog): Promise<void> {
     .upsert({ user_id: userId, day: log.date, carbs: log.carbs, protein: log.protein, fat: log.fat, updated_at: new Date().toISOString() }, { onConflict: "user_id,day" });
   if (error) throw error;
 }
+/** Deletes the signed-in user's log for one day (row-level security limits it to their own). */
+export async function deleteFoodLog(date: string): Promise<void> {
+  const { error } = await supabase()!.from("nutrition_logs").delete().eq("day", date);
+  if (error) throw error;
+}
 export function foodLogError(error: unknown): string {
   const m = String((error as { message?: string })?.message || "");
   if (/nutrition_logs.* does not exist|could not find the table/i.test(m)) return "Food logs aren't set up yet. Run supabase/nutrition_logs.sql in Supabase.";

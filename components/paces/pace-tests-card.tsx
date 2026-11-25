@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CollapsibleCard } from "@/components/plans/collapsible-card";
 import { useApp } from "@/components/app-provider";
 import { addDays } from "@/lib/calendar";
 import { fmtShortDate } from "@/lib/format";
@@ -20,9 +20,7 @@ export function PaceTestsCard() {
     });
 
   return (
-    <Card id="pace-tests" className="scroll-mt-8 gap-4 py-6">
-      <CardHeader className="px-4 md:px-6"><CardTitle className="font-black">5k Tests</CardTitle></CardHeader>
-      <CardContent className="flex flex-col gap-4 px-4 md:px-6">
+    <CollapsibleCard id="pace-tests" storageKey="pace-tests" title="5k Tests">
         {periods.length < 2 ? (
           <p className="max-w-[65ch] text-muted-foreground">
             Your season is one 12-week period. Add a later end date in Season to get a 5k test at the end of each period.
@@ -61,7 +59,6 @@ export function PaceTestsCard() {
             </ul>
           </>
         )}
-      </CardContent>
-    </Card>
+    </CollapsibleCard>
   );
 }

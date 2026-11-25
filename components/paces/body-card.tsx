@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { HeartPulse } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CollapsibleCard } from "@/components/plans/collapsible-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -84,9 +84,8 @@ export function BodyCard() {
   const lb = kg ? (kg / KG_PER_LB).toFixed(1) : null;
 
   return (
-    <Card className="gap-4 py-6">
-      <CardHeader className="px-4 md:px-6"><CardTitle className="font-black">Body &amp; nutrition</CardTitle></CardHeader>
-      <CardContent className="flex flex-col gap-4 px-4 md:px-6">
+    <CollapsibleCard storageKey="body" title="Body & nutrition"
+      summary={[lb ? `${lb} lb` : null, n.bodyFat ? `${n.bodyFat}% body fat` : null, `${n.goal[0].toUpperCase()}${n.goal.slice(1)}`].filter(Boolean).join(" · ")}>
         <p className="max-w-[65ch] font-extralight text-muted-foreground">
           Fuel targets come from your weight and the day&apos;s training. Body fat, height, age and sex only feed the estimated daily burn shown on Fuel.
         </p>
@@ -169,7 +168,6 @@ export function BodyCard() {
             </p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+    </CollapsibleCard>
   );
 }

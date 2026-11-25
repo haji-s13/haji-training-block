@@ -1,5 +1,6 @@
 "use client";
 
+import { CollapsibleCard } from "@/components/plans/collapsible-card";
 import { useState } from "react";
 import { Copy, HeartPulse } from "lucide-react";
 import { toast } from "sonner";
@@ -31,12 +32,8 @@ export function HealthConnectCard() {
   const { key, setKey, ready } = useHealthKey();
   const [confirmNew, setConfirmNew] = useState(false);
   return (
-    <section className="flex flex-col gap-4 rounded-lg border bg-card p-4 md:p-6">
-      <div className="flex items-center gap-2">
-        <HeartPulse className="size-5" aria-hidden />
-        <h2 className="font-black">Google Health Connect</h2>
-        <span className={cn("ml-auto text-meta uppercase", key ? "text-status-ok" : "text-muted-foreground")}>{key ? "Set up" : "Not set up"}</span>
-      </div>
+    <CollapsibleCard storageKey="health-connect" title="Google Health Connect" icon={<HeartPulse className="size-5 shrink-0" aria-hidden />}
+      status={<span className={cn("text-meta uppercase", key ? "text-status-ok" : "text-muted-foreground")}>{key ? "Set up" : "Not set up"}</span>}>
       <p className="max-w-[65ch] text-muted-foreground">
         Shows your weight (from your Renpho scale) and sleep on the Dashboard. Your phone sends them from Health Connect, so the Renpho app stays signed in.
       </p>
@@ -69,6 +66,6 @@ export function HealthConnectCard() {
         </>
       )}
 
-    </section>
+    </CollapsibleCard>
   );
 }
