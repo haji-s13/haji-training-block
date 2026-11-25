@@ -295,7 +295,7 @@ function LogCard({ day, label, log, synced, saving, signedIn, onSave, onDelete }
             <AlertDialogHeader>
               <AlertDialogTitle>Delete {label}?</AlertDialogTitle>
               <AlertDialogDescription>
-                This removes what you logged for this day{signedIn ? " from your account" : ""}. Your targets stay the same. You can log the day again afterwards.
+                This removes what you typed for this day{signedIn ? " from your account" : ""}.{synced ? " The totals synced from your phone come back." : ""} Your targets stay the same, and you can log the day again afterwards.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

@@ -142,3 +142,14 @@ test("a custom deficit is used and kept in range", () => {
   assert.equal(normalizeNutrition({ deficit: 600 }).deficit, 600);
   assert.equal(normalizeNutrition({ deficit: 5000 }).deficit, undefined);
 });
+
+test("calories-only synced records don't create an empty day", async () => {
+  const { dailyFromMeals } = await import("../lib/nutrition");
+  assert.deepEqual(dailyFromMeals([{ at: new Date(2026, 10, 24, 12).toISOString(), carbs: 0, protein: 0, fat: 0 }]), {});
+});
+
+test("an extreme deficit keeps calories equal to the macros", () => {
+  const t = dayTargets("rest", 40, { ...n, proteinPerKg: 3, goal: "lose", deficit: 1000 });
+  assert.ok(t.carbs >= 0);
+  assert.ok(Math.abs(kcalOf(t.carbs, t.protein, t.fat) - t.kcal) <= 15);
+});

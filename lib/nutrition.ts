@@ -109,7 +109,7 @@ export function dayTargets(gear: Gear, kg: number, n: Pick<NutritionSettings, "p
     const fromFat = Math.min(cut / 9, Math.max(0, fat - minFat));
     fat -= fromFat;
     carbs = Math.max(0, carbs - (cut - fromFat * 9) / 4);
-    kcal = newKcal;
+    kcal = carbs > 0 ? newKcal : kcalOf(carbs, protein, fat);
   } else if (n.goal === "gain") {
     carbs += GOAL_KCAL / 4;
     kcal += GOAL_KCAL;
@@ -180,7 +180,10 @@ export function dailyFromMeals(meals: { at: string; carbs: number; protein: numb
     if (m.source && !d.apps.includes(appName(m.source))) d.apps.push(appName(m.source));
     d.carbs += Number(m.carbs) || 0; d.protein += Number(m.protein) || 0; d.fat += Number(m.fat) || 0;
   }
-  for (const d of Object.values(out)) { d.carbs = Math.round(d.carbs); d.protein = Math.round(d.protein); d.fat = Math.round(d.fat); }
+  for (const d of Object.values(out)) {
+    d.carbs = Math.round(d.carbs); d.protein = Math.round(d.protein); d.fat = Math.round(d.fat);
+    if (!d.carbs && !d.protein && !d.fat) delete out[d.date]; // calories only: no macros to show
+  }
   return out;
 }
 

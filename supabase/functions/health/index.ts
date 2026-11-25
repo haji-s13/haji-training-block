@@ -75,7 +75,7 @@ function nutritionFrom(body: Record<string, unknown>, keyHash: string): Nutritio
   const rows: NutritionRow[] = [];
   for (const r of Array.isArray(body.nutrition) ? body.nutrition : []) {
     const at = iso(r?.start_time ?? r?.time);
-    if (!at) continue;
+    if (!at || Date.parse(at) > Date.now() + 86400000) continue; // nothing from the future
     const meta = (r?.metadata ?? {}) as Record<string, unknown>;
     const data = {
       kcal: grams(r?.calories ?? r?.energy_kcal), carbs: grams(r?.carbs_grams), protein: grams(r?.protein_grams), fat: grams(r?.fat_grams),
@@ -100,7 +100,8 @@ function deletedNutrition(body: Record<string, unknown>): string[] {
 
 const inList = (ids: string[]) => `(${ids.map((id) => `"${id.replace(/["\\]/g, "")}"`).join(",")})`;
 
-async function ingest(body: Record<string, unknown>, keyHash: string) {
+/** Stores meals and applies deletions. Its own errors are reported, never allowed to block weight and sleep. */
+async function ingestNutrition(body: Record<string, unknown>, keyHash: string) {
   const food = nutritionFrom(body, keyHash);
   const gone = deletedNutrition(body);
   if (food.length) {
@@ -110,6 +111,10 @@ async function ingest(body: Record<string, unknown>, keyHash: string) {
   for (let i = 0; i < gone.length; i += 100) {
     await rest(`health_nutrition?key_hash=eq.${keyHash}&record_id=in.${encodeURIComponent(inList(gone.slice(i, i + 100)))}`, { method: "DELETE" });
   }
+  return { nutrition: food.length, deleted: gone.length };
+}
+
+async function ingest(body: Record<string, unknown>, keyHash: string) {
   const rows = rowsFrom(body, keyHash);
   if (rows.length) {
     await rest("health_records?on_conflict=key_hash,kind,at", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(rows) });
@@ -121,7 +126,9 @@ async function ingest(body: Record<string, unknown>, keyHash: string) {
       method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ received_at: new Date().toISOString() }),
     });
   }
-  return { stored: rows.length, nutrition: food.length, deleted: gone.length };
+  // Weight and sleep are saved first; a nutrition problem only shows up in the reply.
+  const food = await ingestNutrition(body, keyHash).catch((e) => ({ nutrition: 0, deleted: 0, nutritionError: e instanceof Error ? e.message : "failed" }));
+  return { stored: rows.length, ...food };
 }
 
 async function read(keyHash: string) {
@@ -129,8 +136,8 @@ async function read(keyHash: string) {
   type Stored = { at: string; data: Record<string, unknown>; received_at: string };
   const q = (kind: string, days: number): Promise<Stored[]> =>
     rest(`health_records?select=at,data,received_at&key_hash=eq.${keyHash}&kind=eq.${kind}&at=gte.${encodeURIComponent(since(days))}&order=at.desc&limit=1000`).then((r) => r.json()).then((rows: Stored[]) => rows.reverse());
-  const meals = rest(`health_nutrition?select=at,data,received_at&key_hash=eq.${keyHash}&at=gte.${encodeURIComponent(since(60))}&order=at.asc&limit=2000`)
-    .then((r) => r.json()) as Promise<Stored[]>;
+  const meals = rest(`health_nutrition?select=at,data,received_at&key_hash=eq.${keyHash}&at=gte.${encodeURIComponent(since(60))}&order=at.desc&limit=2000`)
+    .then((r) => r.json()).then((rows: Stored[]) => rows.reverse()).catch((): Stored[] => []);
   const [weight, sleep, nutrition] = await Promise.all([q("weight", 60), q("sleep", 30), meals]);
   return {
     weight: weight.map((r) => ({ ts: Date.parse(r.at), kg: Number(r.data.kg) })),
