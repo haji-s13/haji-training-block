@@ -128,6 +128,8 @@ export interface HxWeek {
   weak: Station[];
   /** Extra volume on weak stations, in percent (25 or 50). */
   weakPct?: number;
+  /** Shown in exported text, e.g. "Lifting". Defaults to HYROX. */
+  program?: string;
 }
 export interface HxPlan { weeks: HxWeek[]; vol: Partial<Record<Station, number>>; totalMin: number; blocks: CalBlock[] }
 
@@ -881,7 +883,7 @@ export function numChanges(was: string, now: string): [string, string][] | null 
 
 /** Plain text for one day (Copy button, intervals.icu description). */
 export function hxDayText(wk: HxWeek, d: HxDay): string {
-  const lines = [`${d.title} – HYROX week ${wk.n} (${wk.phase})`];
+  const lines = [`${d.title} – ${wk.program ?? "HYROX"} week ${wk.n} (${wk.phase})`];
   const pct = wk.weakPct ?? 25;
   for (const b of d.blocks) {
     if (b.label === "Warm-up") { lines.push(`Warm-up: ${b.text}`); continue; }

@@ -50,10 +50,10 @@ export function HyroxDayRow({ wk, i, onIcu, busy, hideRun = false }: { wk: HxWee
         <p className="text-meta uppercase text-muted-foreground">
           {DAYS[i]} <span className="font-extralight normal-case tracking-normal">{fmtShortDate(hxDayDate(wk, i))}</span>
         </p>
-        <span className={cn("rounded-full bg-card px-2 text-meta uppercase", HX_INK[d.type])}>{d.type === "vacation" ? "Vacation" : empty ? "No stations" : d.title}</span>
+        <span className={cn("rounded-full bg-card px-2 text-meta uppercase", HX_INK[d.type])}>{d.type === "vacation" ? "Vacation" : empty ? (wk.program ? "No gym" : "No stations") : d.title}</span>
       </div>
       {empty ? (
-        <p className="text-muted-foreground md:col-span-2">{d.type === "vacation" ? "Time off. Enjoy it." : runLine ? <>Run plan: <span className="text-foreground">{runLine}</span></> : run?.off === "hyrox" ? "HYROX race day" : hideRun ? "No station session today" : "Rest or run plan only"}</p>
+        <p className="text-muted-foreground md:col-span-2">{d.type === "vacation" ? "Time off. Enjoy it." : runLine ? <>Run plan: <span className="text-foreground">{runLine}</span></> : run?.off === "hyrox" && !wk.program ? "HYROX race day" : hideRun ? (wk.program ? "No gym session today" : "No station session today") : "Rest or run plan only"}</p>
       ) : (
         <>
           <div className="flex min-w-0 flex-col gap-1">

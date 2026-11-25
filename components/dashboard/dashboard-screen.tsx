@@ -30,7 +30,7 @@ const HX_DOT: Record<string, string> = {
 const today = () => { const d = new Date(); d.setHours(12, 0, 0, 0); return d; };
 const sameDay = (a: Date, b: Date) => isoDate(a) === isoDate(b);
 
-/** Pick a day, see that day's run and HYROX session (or the next 3 or 7 days). */
+/** Pick a day, see that day's run and lifting session (or the next 3 or 7 days). */
 export function DashboardScreen() {
   const { plan, hyrox, calendar, settings } = useApp();
   const { sendIcu, busy } = useHxSend();
@@ -78,7 +78,7 @@ export function DashboardScreen() {
         </p>
         <h1 className="font-display text-[2rem] leading-10 font-black md:text-display">{label}</h1>
         <p className="num text-muted-foreground">
-          Run <span className="font-black text-foreground">{dist(totals.km, settings.units)}</span> · ~{fmtDuration(totals.runSec)} · HYROX <span className="font-black text-foreground">~{fmtDuration(totals.hxMin * 60)}</span>
+          Run <span className="font-black text-foreground">{dist(totals.km, settings.units)}</span> · ~{fmtDuration(totals.runSec)} · Lifting <span className="font-black text-foreground">~{fmtDuration(totals.hxMin * 60)}</span>
         </p>
       </section>
 
@@ -129,7 +129,7 @@ export function DashboardScreen() {
         </div>
         <p className="text-meta text-muted-foreground">
           <span className="mr-1 inline-block size-1.5 rounded-full bg-muted-foreground align-middle" aria-hidden /> run
-          <span className="mr-1 ml-4 inline-block size-1.5 rounded-sm bg-muted-foreground align-middle" aria-hidden /> HYROX
+          <span className="mr-1 ml-4 inline-block size-1.5 rounded-sm bg-muted-foreground align-middle" aria-hidden /> Lifting
           <span className="ml-4">Plan {start.toLocaleDateString(undefined, { day: "numeric", month: "short" })} – {planEnd.toLocaleDateString(undefined, { day: "numeric", month: "short" })}</span>
         </p>
       </section>
@@ -153,7 +153,7 @@ export function DashboardScreen() {
                 <div className="grid gap-0.5">
                   <p className="px-4 pt-4 text-meta uppercase text-muted-foreground md:px-6">Run</p>
                   {wk ? <DayCell wk={wk} i={at.i} /> : <p className="px-4 pb-4 text-muted-foreground md:px-6">Enter your PB on Profile to see runs.</p>}
-                  <p className="px-4 pt-4 text-meta uppercase text-muted-foreground md:px-6">HYROX</p>
+                  <p className="px-4 pt-4 text-meta uppercase text-muted-foreground md:px-6">Lifting</p>
                   {hw && <HyroxDayRow hideRun wk={hw} i={at.i} busy={busy === `dash-${at.w}-${at.i}`} onIcu={() => sendIcu(`dash-${at.w}-${at.i}`, [{ wk: hw, i: at.i }], `week ${hw.n}`)} />}
                 </div>
               )}

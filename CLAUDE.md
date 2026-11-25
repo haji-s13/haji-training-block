@@ -9,7 +9,7 @@ shadcn/ui, Supabase for accounts. See [README.md](README.md) for features and
 [DESIGN.md](DESIGN.md) for UI rules (DESIGN.md wins over defaults; the user's words win over DESIGN.md).
 
 - `lib/vdot.ts` paces from a PB (VDOT) · `lib/plan.ts` Norwegian Singles run plan ·
-  `lib/hyrox.ts` HYROX station program · `lib/coros.ts`, `lib/intervals.ts` device/platform export ·
+  `lib/lifting.ts` 4-day lifting routine (the Lifting tab, from `research/lifting-4-day-norwegian-doubles.md`) · `lib/hyrox.ts` HYROX station program (no longer shown) · `lib/coros.ts`, `lib/intervals.ts` device/platform export ·
   `lib/supabase.ts`, `supabase/*.sql` accounts and session library.
 - Root `index.html`, `app.js`, `styles.css`, `config.js`, `vendor/` are the old static site, kept for
   rollback. Don't edit them unless asked.
