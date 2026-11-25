@@ -103,3 +103,4 @@ export async function icuPush(athleteId: string | undefined, events: IcuEvent[])
   await icuCall(athleteId, "/events/bulk", "POST", events);
   return events.length;
 }
+

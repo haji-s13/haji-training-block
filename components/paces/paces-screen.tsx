@@ -12,6 +12,7 @@ import { PaceTable } from "./pace-table";
 import { SeasonCard } from "@/components/plans/season-card";
 import { CorosCard } from "@/components/connections/coros-card";
 import { IntervalsCard } from "@/components/connections/intervals-card";
+import { RenphoCard } from "@/components/connections/renpho-card";
 
 /** Profile: your PB, your season (shared by both plans), and the paces they're built from. */
 export function PacesScreen() {
@@ -76,11 +77,12 @@ export function PacesScreen() {
       <section id="connections" className="flex scroll-mt-8 flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="font-display text-[2rem] leading-10 font-black">Connections</h2>
-          <p className="max-w-[65ch] text-muted-foreground">Send workouts to your watch. Connect COROS directly, or use intervals.icu for COROS, Garmin and others.</p>
+          <p className="max-w-[65ch] text-muted-foreground">Send workouts to your watch. Connect COROS directly, or use intervals.icu for COROS, Garmin and others. Connect Renpho to see your weight.</p>
         </div>
         <div className="grid gap-8 lg:grid-cols-2">
           <CorosCard />
           <IntervalsCard />
+          <RenphoCard />
         </div>
       </section>
     </div>

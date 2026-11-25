@@ -98,3 +98,18 @@ with row-level security so only the owner can read or change it; guests have no 
 The first time someone signs in after this, their newest plan from the old "My plans" list is
 copied into their account settings. The old `plans` table is no longer used by the app and can
 be kept or dropped.
+
+## Renpho connection (Edge Function)
+
+Browsers can't call Renpho's servers directly, so the Dashboard weight card goes through a small
+Edge Function, `supabase/functions/renpho`. It stores nothing: the password is passed to Renpho once
+to get a session token, and the app keeps only that token on the device.
+
+Deploy it once (and after any change to it), either way:
+
+- **GitHub:** add the repo secret `SUPABASE_ACCESS_TOKEN` (supabase.com → Account → Access Tokens),
+  then run **Actions → Supabase functions → Run workflow**. Later changes deploy on push to `main`.
+- **Your computer:** `npx supabase functions deploy renpho --no-verify-jwt --project-ref ykfkgmoltgpxjonvomgw`
+
+`--no-verify-jwt` is needed because guests use it too and the publishable key isn't a JWT. The
+function only allows requests from `https://haji-s13.github.io` and `http://localhost:3000`.
