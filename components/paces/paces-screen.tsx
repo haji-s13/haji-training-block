@@ -1,7 +1,7 @@
 "use client";
 
 import { SaveStatus } from "@/components/plans/save-status";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CollapsibleCard } from "@/components/plans/collapsible-card";
 import { useApp } from "@/components/app-provider";
 import { PbForm } from "./pb-form";
 import { PaceTestsCard } from "./pace-tests-card";
@@ -18,6 +18,7 @@ import { HealthConnectCard } from "@/components/connections/health-connect-card"
 /** Profile: your PB, your season (shared by both plans), and the paces they're built from. */
 export function PacesScreen() {
   const { model, currentModel, currentPeriod, settings, user } = useApp();
+  const s = settings;
   const shown = currentModel ?? model;
   const test = currentPeriod > 0 ? testForPeriod(settings, currentPeriod) : null;
   const fromTest = !!test && !!shown && shown !== model;
@@ -28,23 +29,23 @@ export function PacesScreen() {
       <section className="flex flex-col gap-2">
         <h1 className="font-display text-[2rem] leading-10 font-black md:text-display">Profile</h1>
         <p className="max-w-[65ch] text-muted-foreground">
-          {name ? `${name}: your` : "Your"} PB, your season and your connections. The run plan and the HYROX plan are both built from what you set here.
+          {name ? `${name}: your` : "Your"} season, body, PB and connections. The run plan and the HYROX plan are both built from what you set here.
         </p>
         <SaveStatus />
       </section>
 
       <TestPrompt />
 
-      <Card className="gap-4 py-6">
-        <CardHeader className="px-4 md:px-6"><CardTitle className="font-black">Paces</CardTitle></CardHeader>
-        <CardContent className="px-4 md:px-6"><PbForm /></CardContent>
-      </Card>
+      <SeasonCard />
 
       <BodyCard />
 
-      <PaceTestsCard />
+      <CollapsibleCard storageKey="paces" title="Paces"
+        summary={`${s.pbDistance === "10000" ? "10k" : "5k"} PB ${s.pbTime}${shown ? ` · VDOT ${shown.vdot.toFixed(1)}` : ""}`}>
+        <PbForm />
+      </CollapsibleCard>
 
-      <SeasonCard />
+      <PaceTestsCard />
 
       <section className="grid items-end gap-6 md:grid-cols-[auto_minmax(0,1fr)] md:gap-16">
         <div>
@@ -62,19 +63,15 @@ export function PacesScreen() {
       </section>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <Card className="gap-2 py-6">
-          <CardHeader className="px-4 md:px-6"><CardTitle className="text-meta uppercase">Race Predictions</CardTitle></CardHeader>
-          <CardContent className="px-4 md:px-6"><RaceTable /></CardContent>
-        </Card>
-        <Card className="gap-2 py-6">
-          <CardHeader className="px-4 md:px-6"><CardTitle className="text-meta uppercase">Training Paces</CardTitle></CardHeader>
-          <CardContent className="px-4 md:px-6">
-            <PaceTable />
-            <p className="mt-4 max-w-[65ch] font-extralight text-muted-foreground">
-              Reps should feel controlled, and you should finish every session feeling you could do one more. Heart rate and lactate matter more than the watch.
-            </p>
-          </CardContent>
-        </Card>
+        <CollapsibleCard storageKey="race-predictions" title="Race Predictions" className="self-start">
+          <RaceTable />
+        </CollapsibleCard>
+        <CollapsibleCard storageKey="training-paces" title="Training Paces" className="self-start">
+          <PaceTable />
+          <p className="max-w-[65ch] font-extralight text-muted-foreground">
+            Reps should feel controlled, and you should finish every session feeling you could do one more. Heart rate and lactate matter more than the watch.
+          </p>
+        </CollapsibleCard>
       </div>
 
       <section id="connections" className="flex scroll-mt-8 flex-col gap-4">
@@ -82,7 +79,7 @@ export function PacesScreen() {
           <h2 className="font-display text-[2rem] leading-10 font-black">Connections</h2>
           <p className="max-w-[65ch] text-muted-foreground">Send workouts to your watch. Connect COROS directly, or use intervals.icu for COROS, Garmin and others. Connect Google Health Connect to see your weight and sleep.</p>
         </div>
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid items-start gap-8 lg:grid-cols-2">
           <CorosCard />
           <IntervalsCard />
           <HealthConnectCard />

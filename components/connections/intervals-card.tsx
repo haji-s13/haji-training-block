@@ -1,5 +1,6 @@
 "use client";
 
+import { CollapsibleCard } from "@/components/plans/collapsible-card";
 import { useEffect, useState } from "react";
 import { PlugZap } from "lucide-react";
 import { toast } from "sonner";
@@ -20,11 +21,7 @@ export function IntervalsCard() {
   const saveKey = (k: string, r: boolean) => { setKey(k); setRemember(r); setIcuKey(k.trim(), r); };
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border bg-card p-4 md:p-6">
-      <div className="flex items-center gap-2">
-        <PlugZap className="size-5" aria-hidden />
-        <h2 className="font-black">intervals.icu</h2>
-      </div>
+    <CollapsibleCard storageKey="intervals" title="intervals.icu" icon={<PlugZap className="size-5 shrink-0" aria-hidden />}>
       <p className="max-w-[65ch] text-muted-foreground">Sends workouts to your intervals.icu calendar, which syncs to COROS, Garmin and other watches you&apos;ve connected there.</p>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="flex flex-col gap-2">
@@ -48,6 +45,6 @@ export function IntervalsCard() {
         }}>Check connection</Button>
       </div>
       <p className="font-extralight text-muted-foreground">Your key is only sent to intervals.icu. Sending a day again replaces it instead of adding a duplicate.</p>
-    </section>
+    </CollapsibleCard>
   );
 }

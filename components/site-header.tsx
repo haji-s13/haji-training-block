@@ -12,10 +12,9 @@ export function Wordmark() {
         H<span className="font-extralight">/</span>T
       </span>
       <span className="flex min-w-0 flex-col">
-        <span className="truncate font-display text-[0.9375rem] leading-6 font-black tracking-tight sm:text-[1.125rem] md:text-[1.25rem]">
+        <span className="truncate font-display text-[1.125rem] leading-6 font-black tracking-tight md:text-[1.25rem]">
           Haji <span className="font-extralight text-signal">·</span> Training Block
         </span>
-        <span className="text-meta uppercase text-hero-muted">HYROX + Norwegian Singles</span>
       </span>
     </span>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { CollapsibleCard } from "@/components/plans/collapsible-card";
 import { useState } from "react";
 import { Link2, Unlink, Watch } from "lucide-react";
 import { toast } from "sonner";
@@ -13,14 +14,8 @@ export function CorosCard() {
   const [busy, setBusy] = useState(false);
   const connected = !!coros.client;
   return (
-    <section className="flex flex-col gap-4 rounded-lg border bg-card p-4 md:p-6">
-      <div className="flex items-center gap-2">
-        <Watch className="size-5" aria-hidden />
-        <h2 className="font-black">COROS</h2>
-        <span className={connected ? "ml-auto text-meta uppercase text-status-ok" : "ml-auto text-meta uppercase text-muted-foreground"}>
-          {connected ? "Connected" : "Not connected"}
-        </span>
-      </div>
+    <CollapsibleCard storageKey="coros" title="COROS" icon={<Watch className="size-5 shrink-0" aria-hidden />}
+      status={<span className={connected ? "text-meta uppercase text-status-ok" : "text-meta uppercase text-muted-foreground"}>{connected ? "Connected" : "Not connected"}</span>}>
       <p className="max-w-[65ch] text-muted-foreground">
         {coros.source === "connector"
           ? "Using your Claude NSM connector on claude.ai."
@@ -47,6 +42,6 @@ export function CorosCard() {
         <li>Sending a day again adds a second copy, so delete the old one in the COROS app first.</li>
         <li>Your COROS sign-in stays in this browser only.</li>
       </ul>
-    </section>
+    </CollapsibleCard>
   );
 }
