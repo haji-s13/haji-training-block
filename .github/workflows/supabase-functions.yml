@@ -4,7 +4,7 @@ name: Supabase functions
 # One-time setup: add a repo secret SUPABASE_ACCESS_TOKEN (supabase.com → Account → Access Tokens).
 on:
   push:
-    branches: [main, claude/project-thread-lgzcfv]  # the PR branch, so the function can be deployed before merge
+    branches: [main]
     paths: ["supabase/functions/**", ".github/workflows/supabase-functions.yml"]
   workflow_dispatch:
 
