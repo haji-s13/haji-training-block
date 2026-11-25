@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useApp } from "@/components/app-provider";
 import { PbForm } from "./pb-form";
 import { PaceTestsCard } from "./pace-tests-card";
+import { BodyCard } from "./body-card";
 import { TestPrompt } from "@/components/plans/test-prompt";
 import { testForPeriod } from "@/lib/settings";
 import { RaceTable } from "./race-table";
@@ -38,6 +39,8 @@ export function PacesScreen() {
         <CardHeader className="px-4 md:px-6"><CardTitle className="font-black">Paces</CardTitle></CardHeader>
         <CardContent className="px-4 md:px-6"><PbForm /></CardContent>
       </Card>
+
+      <BodyCard />
 
       <PaceTestsCard />
 

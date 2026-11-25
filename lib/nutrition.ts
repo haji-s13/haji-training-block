@@ -54,9 +54,9 @@ export const GEARS: Record<Gear, { label: string; carbs: number; protein: number
 };
 
 export const ACTIVITY_LABELS: Record<Activity, string> = {
-  low: "Mostly sitting (desk job, little walking)",
-  moderate: "On your feet some of the day, walk most days",
-  high: "On your feet most of the day (manual work)",
+  low: "Mostly sitting",
+  moderate: "Some walking most days",
+  high: "On my feet all day",
 };
 /** Multipliers on resting energy for life outside training. */
 const ACTIVITY_FACTOR: Record<Activity, number> = { low: 1.3, moderate: 1.45, high: 1.6 };
